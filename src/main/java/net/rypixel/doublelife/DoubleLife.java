@@ -134,17 +134,13 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
         }
         if (userPair.sharedLives > 2) {
-            threeLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
-            threeLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
+            threeLives.addPlayer(event.getPlayer());
         } else if (userPair.sharedLives == 2) {
-            twoLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
-            twoLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
+            twoLives.addPlayer(event.getPlayer());
         } else if (userPair.sharedLives == 1) {
-            oneLife.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
-            oneLife.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
+            oneLife.addPlayer(event.getPlayer());
         } else {
-            dead.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
-            dead.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
+            dead.addPlayer(event.getPlayer());
         }
     }
 
