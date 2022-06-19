@@ -128,9 +128,23 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
         UUID playerUUID = event.getPlayer().getUniqueId();
-        gameData.uuidUserPair.get(playerUUID).refreshPlayers();
-        if (gameData.uuidUserPair.get(playerUUID).sharedLives == 0) {
+        UserPair userPair = gameData.uuidUserPair.get(playerUUID);
+        userPair.refreshPlayers();
+        if (userPair.sharedLives == 0) {
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
+        }
+        if (userPair.sharedLives > 2) {
+            threeLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
+            threeLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
+        } else if (userPair.sharedLives == 2) {
+            twoLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
+            twoLives.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
+        } else if (userPair.sharedLives == 1) {
+            oneLife.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
+            oneLife.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
+        } else {
+            dead.addPlayer(Bukkit.getOfflinePlayer(userPair.player1));
+            dead.addPlayer(Bukkit.getOfflinePlayer(userPair.player2));
         }
     }
 
