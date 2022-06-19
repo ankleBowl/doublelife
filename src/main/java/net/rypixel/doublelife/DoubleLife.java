@@ -99,7 +99,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case "settings":
                     if (!(sender instanceof Player)) {
-                        return true;
+                        return false;
+                    }
+                    if (gameStarted) {
+                        return false;
                     }
                     Inventory inv = Inventories.getSettingsMenu();
                     ((Player) sender).openInventory(inv);
@@ -193,6 +196,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!gameStarted && event.getView().getTitle().equalsIgnoreCase("Settings")) {
+            event.setCancelled(true);
             if (event.getCurrentItem() == null) {
                 return;
             }
@@ -222,6 +226,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         }
 
         if (!gameStarted && event.getView().getTitle().equalsIgnoreCase("Settings - Life Count")) {
+            event.setCancelled(true);
             if (event.getCurrentItem() == null) {
                 return;
             }
