@@ -189,7 +189,7 @@ class UserPair implements Serializable {
 
     public int sharedLives;
 
-    public double sharedHealth;
+    public double sharedHealth = 20;
 
     public boolean isSharingHunger;
     public double sharedHunger = 20;
