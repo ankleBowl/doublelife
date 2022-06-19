@@ -1,0 +1,7 @@
+name: DoubleLife
+version: '${project.version}'
+main: net.rypixel.doublelife.DoubleLife
+api-version: 1.19
+authors: [ ankleBowl ]
+commands:
+  doublelife:
