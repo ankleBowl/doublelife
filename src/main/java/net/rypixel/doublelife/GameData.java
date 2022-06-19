@@ -126,6 +126,7 @@ public class GameData implements Serializable {
             participatingPlayers.remove(player1);
             random = new Random();
             Player player2 = participatingPlayers.get(random.nextInt(participatingPlayers.size()));
+            participatingPlayers.remove(player2);
             UserPair pair = new UserPair(player1.getUniqueId(), player2.getUniqueId(), isSharingHunger, startingLives);
             gameData.uuidUserPair.put(player1.getUniqueId(), pair);
             gameData.uuidUserPair.put(player2.getUniqueId(), pair);
