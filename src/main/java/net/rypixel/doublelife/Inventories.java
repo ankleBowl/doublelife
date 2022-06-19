@@ -54,6 +54,8 @@ public class Inventories {
 
         lore.add("Decrease the starting");
         lore.add("life count");
+        lore.add("");
+        lore.add("Currently: " + GameData.startingLives);
         inv.setItem(3, getItem(Material.COAL, "Decrease", lore));
         lore.clear();
 
@@ -65,6 +67,8 @@ public class Inventories {
 
         lore.add("Increase the starting");
         lore.add("life count");
+        lore.add("");
+        lore.add("Currently: " + GameData.startingLives);
         inv.setItem(5, getItem(Material.DIAMOND, "Increase", lore));
         lore.clear();
 
