@@ -142,10 +142,11 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (event.getEntity() instanceof Player) {
             if (((Player) event.getEntity()).getHealth() - event.getFinalDamage() <= 0) {
                 killPlayers((Player) event.getEntity());
+//                event.setCancelled(true);
             } else {
                 onHealthChange((Player) event.getEntity(), ((Player) event.getEntity()).getHealth() - event.getFinalDamage());
+                event.setDamage(0);
             }
-            event.setDamage(0);
         }
     }
 
@@ -168,7 +169,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     public void killPlayers(Player p) {
         UUID playerUUID = p.getUniqueId();
         UserPair pair = gameData.uuidUserPair.get(playerUUID);
-        pair.killPlayers();
+        pair.killPlayers(p);
         if (pair.sharedLives > 2) {
             return;
         } else if (pair.sharedLives == 2) {

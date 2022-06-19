@@ -239,13 +239,17 @@ class UserPair implements Serializable {
         }
     }
 
-    public void killPlayers() {
+    public void killPlayers(Player p) {
+        if (System.currentTimeMillis() - lastDamageUpdated < 50) {
+            return;
+        }
+        lastDamageUpdated = System.currentTimeMillis();
         Player tPlayer = Bukkit.getPlayer(player1);
-        if (tPlayer != null) {
+        if (tPlayer != null && tPlayer != p) {
             tPlayer.setHealth(0);
         }
         tPlayer = Bukkit.getPlayer(player2);
-        if (tPlayer != null) {
+        if (tPlayer != null && tPlayer != p) {
             tPlayer.setHealth(0);
         }
         sharedLives -= 1;
