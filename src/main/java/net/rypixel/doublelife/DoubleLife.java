@@ -110,6 +110,13 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     if (args.length < 2) {
                         sender.sendMessage("\"This command will remove all save data for DoubleLife. Please run /doublelife restart confirm to allow this.\"");
                     }
+                    gameStarted = true;
+                    gameData = GameData.createData(isSharingHunger);
+                    for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
+                        threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                        threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                    }
+                    gameData.saveData();
                 case "help":
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
