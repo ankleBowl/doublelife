@@ -78,7 +78,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (label.equalsIgnoreCase("doublelife")) {
+        if (label.equalsIgnoreCase("doublelife") && sender.isOp()) {
             if (args.length < 1) {
                 if (sender instanceof Player) {
                     sender.sendMessage("Usage: /doublelife [start/settings/stop/restart/freeze/help]");
