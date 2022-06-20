@@ -213,6 +213,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (!gameStarted) {
             return;
         }
+        if (gameFrozen) {
+            event.setCancelled(true);
+            return;
+        }
         if (event.getEntity() instanceof Player) {
             onHealthChange((Player) event.getEntity(), ((Player) event.getEntity()).getHealth() + event.getAmount());
             event.setCancelled(true);
