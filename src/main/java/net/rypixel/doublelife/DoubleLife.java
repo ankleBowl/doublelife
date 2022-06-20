@@ -152,7 +152,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         for (World w : Bukkit.getWorlds()) {
                             w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
                         }
+                        gameFrozen = false;
                     }
+                    break;
                 case "help":
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
