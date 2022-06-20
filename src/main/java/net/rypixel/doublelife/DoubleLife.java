@@ -136,15 +136,23 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         sender.sendMessage(ChatColor.RED + "The game must be started to freeze!");
                         return false;
                     }
-                    Bukkit.broadcastMessage(ChatColor.YELLOW + "The game has been frozen!");
-                    for (World w : Bukkit.getWorlds()) {
-                        for (Entity e : w.getEntities()) {
-                            if (e instanceof Mob) {
-                                ((Mob) e).setTarget(null);
+                    if (!gameFrozen) {
+                        gameFrozen = true;
+                        Bukkit.broadcastMessage(ChatColor.YELLOW + "The game has been frozen!");
+                        for (World w : Bukkit.getWorlds()) {
+                            w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+                            for (Entity e : w.getEntities()) {
+                                if (e instanceof Mob) {
+                                    ((Mob) e).setTarget(null);
+                                }
                             }
                         }
+                    } else {
+                        Bukkit.broadcastMessage(ChatColor.GREEN + "The game has been resumed!");
+                        for (World w : Bukkit.getWorlds()) {
+                            w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
+                        }
                     }
-                    gameFrozen = true;
                 case "help":
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
