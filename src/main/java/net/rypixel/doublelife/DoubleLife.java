@@ -1,25 +1,27 @@
 package net.rypixel.doublelife;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+import org.spigotmc.event.entity.EntityMountEvent;
 
 import java.util.Map;
 import java.util.UUID;
@@ -28,6 +30,8 @@ public final class DoubleLife extends JavaPlugin implements Listener {
 
     public GameData gameData;
     boolean gameStarted = true;
+    boolean gameDataExists = true;
+    boolean gameFrozen = false;
 
     public Team threeLives;
     public Team twoLives;
@@ -44,6 +48,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         gameData = GameData.readData();
         if (gameData == null) {
             gameStarted = false;
+            gameDataExists = false;
         }
         Bukkit.getPluginManager().registerEvents(this, this);
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
@@ -76,9 +81,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (label.equalsIgnoreCase("doublelife")) {
             if (args.length < 1) {
                 if (sender instanceof Player) {
-                    sender.sendMessage("Usage: /doublelife [start/settings/stop/restart/help]");
+                    sender.sendMessage("Usage: /doublelife [start/settings/stop/restart/freeze/help]");
                 } else {
-                    sender.sendMessage("Usage: /doublelife [start/stop/restart/help]");
+                    sender.sendMessage("Usage: /doublelife [start/stop/restart/freeze/help]");
                     sender.sendMessage("To view settings, run this command on a Minecraft client");
                 }
                 return true;
@@ -89,12 +94,16 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         return false;
                     }
                     gameStarted = true;
+                    if (gameDataExists) {
+                        return true;
+                    }
                     gameData = GameData.createData(isSharingHunger);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
                         threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
                         threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
                     }
                     gameData.saveData();
+                    gameDataExists = true;
                     break;
                 case "settings":
                     if (!(sender instanceof Player)) {
@@ -117,6 +126,25 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
                     }
                     gameData.saveData();
+                    gameDataExists = true;
+                case "stop":
+                    gameStarted = false;
+                    sender.sendMessage(ChatColor.YELLOW + "The game has been paused. Players will take damage normally");
+                    break;
+                case "freeze":
+                    if (!gameStarted) {
+                        sender.sendMessage(ChatColor.RED + "The game must be started to freeze!");
+                        return false;
+                    }
+                    Bukkit.broadcastMessage(ChatColor.YELLOW + "The game has been frozen!");
+                    for (World w : Bukkit.getWorlds()) {
+                        for (Entity e : w.getEntities()) {
+                            if (e instanceof Mob) {
+                                ((Mob) e).setTarget(null);
+                            }
+                        }
+                    }
+                    gameFrozen = true;
                 case "help":
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
@@ -301,6 +329,20 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             event.getPlayer().sendTitle(ChatColor.RED + String.valueOf(pair.sharedLives), ChatColor.RED + "Lives remaining...", 10, 40, 10);
         } else {
             event.getPlayer().sendTitle(ChatColor.BLACK + "YOU ARE DEAD", "", 10, 40, 10);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        if (gameFrozen) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onEntityTarget(EntityTargetEvent event) {
+        if (gameFrozen) {
+            event.setCancelled(true);
         }
     }
 }
