@@ -76,11 +76,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (label.equalsIgnoreCase("doublelife")) {
             if (args.length < 1) {
                 if (sender instanceof Player) {
-                    Player p = (Player) sender;
-                    p.sendMessage("Usage: /doublelife [start/settings/help]");
+                    sender.sendMessage("Usage: /doublelife [start/settings/stop/restart/help]");
                 } else {
-                    Bukkit.getLogger().info("Usage: /doublelife [start/help]");
-                    Bukkit.getLogger().info("To view settings, run this command on a Minecraft client");
+                    sender.sendMessage("Usage: /doublelife [start/stop/restart/help]");
+                    sender.sendMessage("To view settings, run this command on a Minecraft client");
                 }
                 return true;
             }
@@ -107,12 +106,16 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     Inventory inv = Inventories.getSettingsMenu();
                     ((Player) sender).openInventory(inv);
                     break;
+                case "restart":
+                    if (args.length < 2) {
+                        sender.sendMessage("\"This command will remove all save data for DoubleLife. Please run /doublelife restart confirm to allow this.\"");
+                    }
                 case "help":
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
-                        p.sendMessage("Usage: /doublelife [start/settings/help]");
+                        p.sendMessage("Usage: /doublelife [start/settings/stop/restart/help]");
                     } else {
-                        Bukkit.getLogger().info("Usage: /doublelife [start/help]");
+                        Bukkit.getLogger().info("Usage: /doublelife [start/stop/restart/help]");
                         Bukkit.getLogger().info("To view settings, run this command on a Minecraft client");
                     }
                     break;
