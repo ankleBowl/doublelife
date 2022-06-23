@@ -47,6 +47,29 @@ public class Inventories {
         return inv;
     }
 
+    public static Inventory getPredeterminedMenu(int scrollAmount) {
+        Inventory inv = Bukkit.createInventory(null, 54, "Predetermined Groups - " + scrollAmount);
+
+        ArrayList<String> lore = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            if (GameData.predeterminedGroups.size() > scrollAmount * 2) {
+                inv.setItem(i * 9, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get(scrollAmount * 2)).getName(), lore));
+                inv.setItem(i * 9 + 1, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get(scrollAmount * 2 + 1)).getName(), lore));
+                inv.setItem(i * 9 + 8, getItem(Material.BARRIER, "Remove Group", lore));
+            }
+        }
+
+        if ((scrollAmount + 5) * 2 < GameData.predeterminedGroups.size()) {
+            inv.setItem(53, getItem(Material.DIAMOND, "Up", lore));
+        }
+        if (scrollAmount > 0) {
+            inv.setItem(52, getItem(Material.COAL, "Down", lore));
+        }
+
+        return inv;
+    }
+
     public static Inventory getLifeCountManager() {
         Inventory inv = Bukkit.createInventory(null, 9, "Settings - Life Count");
 

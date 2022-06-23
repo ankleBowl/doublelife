@@ -21,7 +21,7 @@ public class GameData implements Serializable {
 
 
     // Config
-    public static ArrayList<Player> predeterminedGroups = new ArrayList<>();
+    public static ArrayList<UUID> predeterminedGroups = new ArrayList<>();
     public static boolean announceSoulmate = false;
     public static boolean tellSoulmate = false;
     public static int startingLives = 3;
@@ -135,13 +135,13 @@ public class GameData implements Serializable {
         if (predeterminedGroups.size() > 0) {
             for (int i = 0; i < playerCount; i += 2) {
                 random = new Random();
-                Player player1 = predeterminedGroups.get(0);
+                UUID player1 = predeterminedGroups.get(0);
                 participatingPlayers.remove(player1);
                 random = new Random();
-                Player player2 = predeterminedGroups.get(0);
-                UserPair pair = new UserPair(player1.getUniqueId(), player2.getUniqueId(), isSharingHunger, startingLives);
-                gameData.uuidUserPair.put(player1.getUniqueId(), pair);
-                gameData.uuidUserPair.put(player2.getUniqueId(), pair);
+                UUID player2 = predeterminedGroups.get(0);
+                UserPair pair = new UserPair(player1, player2, isSharingHunger, startingLives);
+                gameData.uuidUserPair.put(player1, pair);
+                gameData.uuidUserPair.put(player2, pair);
             }
         }
 
