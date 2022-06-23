@@ -179,6 +179,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         UUID playerUUID = event.getPlayer().getUniqueId();
         UserPair userPair = gameData.uuidUserPair.get(playerUUID);
         userPair.refreshPlayers();
+        if (userPair.sharedLives == -1) {
+            event.getPlayer().setScoreboard(null);
+            return;
+        }
         if (userPair.sharedLives == 0) {
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
         }
@@ -318,6 +322,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         GameData.startingLives += 1;
                     }
                     break;
+                case REDSTONE:
+                    GameData.lifeCountEnabled = !GameData.lifeCountEnabled;
+                    break;
             }
             if (refreshView) {
                 inv = Inventories.getLifeCountManager();
@@ -350,6 +357,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     GameData.predeterminedGroups.remove(clickedIndex * 2);
                     GameData.predeterminedGroups.remove(clickedIndex * 2);
                     break;
+                case ARROW:
+                    inv = Inventories.getSettingsMenu();
+                    event.getWhoClicked().openInventory(inv);
+                    refreshView = false;
             }
             if (refreshView) {
                 inv = Inventories.getPredeterminedMenu(scrollAmount);
@@ -398,6 +409,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
         UserPair pair = gameData.uuidUserPair.get(event.getPlayer().getUniqueId());
+        if (pair.sharedLives == -99) {
+            return;
+        }
         if (pair.sharedLives < 1) {
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
         }

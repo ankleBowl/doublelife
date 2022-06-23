@@ -47,10 +47,9 @@ public class Inventories {
         inv.setItem(3, getItem(Material.NETHER_STAR, "Manage Lives", lore));
         lore.clear();
 
-//        lore.add("Manage the amount of");
-//        lore.add("starting lives each");
-//        lore.add("team has");
-        inv.setItem(3, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
+        lore.add("Manage the predetermined");
+        lore.add("starting teams");
+        inv.setItem(4, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
         lore.clear();
 
         return inv;
@@ -62,12 +61,19 @@ public class Inventories {
         Inventory inv = Bukkit.createInventory(null, 54, "Predetermined Groups - " + scrollAmount);
 
         ArrayList<String> lore = new ArrayList<>();
+        ItemStack empty = getItem(Material.GRAY_STAINED_GLASS_PANE, " ", lore);
 
         for (int i = 0; i < 5; i++) {
             if (GameData.predeterminedGroups.size() > (scrollAmount + i) * 2) {
+                inv.setItem(i * 9, empty);
                 inv.setItem(i * 9 + 1, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get((scrollAmount + i) * 2)).getName(), lore));
+                inv.setItem(i * 9 + 2, empty);
                 inv.setItem(i * 9 + 3, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get((scrollAmount + i) * 2 + 1)).getName(), lore));
-                inv.setItem(i * 9 + 8, getItem(Material.BARRIER, "Remove Group", lore));
+                inv.setItem(i * 9 + 4, empty);
+                inv.setItem(i * 9 + 5, empty);
+                inv.setItem(i * 9 + 6, empty);
+                inv.setItem(i * 9 + 7, getItem(Material.BARRIER, ChatColor.RED + "Remove Group", lore));
+                inv.setItem(i * 9 + 8, empty);
             }
         }
 
@@ -78,7 +84,13 @@ public class Inventories {
             inv.setItem(52, getItem(Material.COAL, "Up", lore));
         }
         inv.setItem(51, getItem(Material.NETHER_STAR, "Add Team", lore));
+        inv.setItem(50, getItem(Material.ARROW, "Back", lore));
 
+        inv.setItem(45, empty);
+        inv.setItem(46, empty);
+        inv.setItem(47, empty);
+        inv.setItem(48, empty);
+        inv.setItem(49, empty);
         return inv;
     }
 
@@ -123,24 +135,32 @@ public class Inventories {
 
         ArrayList<String> lore = new ArrayList<>();
 
-        lore.add("Decrease the starting");
-        lore.add("life count");
-        lore.add("");
-        lore.add("Currently: " + GameData.startingLives);
-        inv.setItem(3, getItem(Material.COAL, "Decrease", lore));
-        lore.clear();
+        if (GameData.lifeCountEnabled) {
+            lore.add("Decrease the starting");
+            lore.add("life count");
+            lore.add("");
+            lore.add("Currently: " + GameData.startingLives);
+            inv.setItem(3, getItem(Material.COAL, "Decrease", lore));
+            lore.clear();
 
-        if (GameData.startingLives == 1) {
-            inv.setItem(4, getItem(Material.NETHER_STAR, GameData.startingLives + " Life", lore));
-        } else {
-            inv.setItem(4, getItem(Material.NETHER_STAR, GameData.startingLives + " Lives", lore));
+            if (GameData.startingLives == 1) {
+                inv.setItem(4, getItem(Material.NETHER_STAR, GameData.startingLives + " Life", lore));
+            } else {
+                inv.setItem(4, getItem(Material.NETHER_STAR, GameData.startingLives + " Lives", lore));
+            }
+
+            lore.add("Increase the starting");
+            lore.add("life count");
+            lore.add("");
+            lore.add("Currently: " + GameData.startingLives);
+            inv.setItem(5, getItem(Material.DIAMOND, "Increase", lore));
+            lore.clear();
         }
 
-        lore.add("Increase the starting");
-        lore.add("life count");
-        lore.add("");
-        lore.add("Currently: " + GameData.startingLives);
-        inv.setItem(5, getItem(Material.DIAMOND, "Increase", lore));
+        lore.add("Toggle if players have");
+        lore.add("a life count or if they");
+        lore.add("live forever.");
+        inv.setItem(7, getItem(Material.REDSTONE, "Toggle Lives", GameData.lifeCountEnabled, lore));
         lore.clear();
 
         inv.setItem(8, getItem(Material.ARROW, "Back", lore));

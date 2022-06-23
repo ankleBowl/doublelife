@@ -26,6 +26,7 @@ public class GameData implements Serializable {
     public static boolean tellSoulmate = false;
     public static int startingLives = 3;
     public static boolean canCraftEnchantingTableStatic = true;
+    public static boolean lifeCountEnabled = false;
 
     public boolean canCraftEnchantingTable = true;
 
@@ -117,6 +118,10 @@ public class GameData implements Serializable {
 
         GameData gameData = new GameData();
         gameData.canCraftEnchantingTable = GameData.canCraftEnchantingTableStatic;
+
+        if (!lifeCountEnabled) {
+            startingLives = -99;
+        }
 
         Random random;
         final int playerCount = participatingPlayers.size();
@@ -252,7 +257,9 @@ class UserPair implements Serializable {
         if (tPlayer != null && tPlayer != p) {
             tPlayer.setHealth(0);
         }
-        sharedLives -= 1;
+        if (sharedLives != -99) {
+            sharedLives -= 1;
+        }
         sharedHealth = 20;
     }
 
