@@ -100,8 +100,20 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     }
                     gameData = GameData.createData(isSharingHunger);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
-                        threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
-                        threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        if (pair.getValue().sharedLives > 3) {
+                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else if (pair.getValue().sharedLives == 2) {
+                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else if (pair.getValue().sharedLives == 1) {
+                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else {
+                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        }
+
                     }
                     gameData.saveData();
                     gameDataExists = true;
