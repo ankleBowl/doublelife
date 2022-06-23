@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -258,6 +259,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+        Inventory inv = null;
         if (!gameStarted && event.getView().getTitle().equalsIgnoreCase("Settings")) {
             event.setCancelled(true);
             if (event.getCurrentItem() == null) {
@@ -276,13 +278,19 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     GameData.canCraftEnchantingTableStatic = !GameData.canCraftEnchantingTableStatic;
                     break;
                 case NETHER_STAR:
-                    Inventory inv = Inventories.getLifeCountManager();
+                    inv = Inventories.getLifeCountManager();
                     event.getWhoClicked().openInventory(inv);
                     refreshView = false;
                     break;
+                case TOTEM_OF_UNDYING:
+                    inv = Inventories.getPredeterminedMenu(0);
+                    event.getWhoClicked().openInventory(inv);
+                    refreshView = false;
+                    break;
+
             }
             if (refreshView) {
-                Inventory inv = Inventories.getSettingsMenu();
+                inv = Inventories.getSettingsMenu();
                 ((Player) event.getWhoClicked()).openInventory(inv);
             }
             return;
@@ -296,9 +304,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             boolean refreshView = true;
             switch (event.getCurrentItem().getType()) {
                 case ARROW:
-                    Inventory inv = Inventories.getSettingsMenu();
+                    inv = Inventories.getSettingsMenu();
                     event.getWhoClicked().openInventory(inv);
                     refreshView = false;
+                    break;
                 case COAL:
                     if (GameData.startingLives > 1) {
                         GameData.startingLives -= 1;
@@ -311,10 +320,68 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
             }
             if (refreshView) {
-                Inventory inv = Inventories.getLifeCountManager();
+                inv = Inventories.getLifeCountManager();
                 ((Player) event.getWhoClicked()).openInventory(inv);
             }
             return;
+        }
+
+        if (!gameStarted && event.getView().getTitle().startsWith("Predetermined Groups - ")) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() == null) {
+                return;
+            }
+            int scrollAmount = Integer.parseInt(event.getView().getTitle().substring(event.getView().getTitle().length() - 1, event.getView().getTitle().length()));
+            boolean refreshView = true;
+            switch (event.getCurrentItem().getType()) {
+                case NETHER_STAR:
+                    refreshView = false;
+                    inv = Inventories.createPredeterminedTeam(null);
+                    ((Player) event.getWhoClicked()).openInventory(inv);
+                    break;
+                case COAL:
+                    scrollAmount -= 1;
+                    break;
+                case DIAMOND:
+                    scrollAmount += 1;
+                    break;
+                case BARRIER:
+                    int clickedIndex = ((event.getSlot() - 8) % 9) + scrollAmount;
+                    GameData.predeterminedGroups.remove(clickedIndex * 2);
+                    GameData.predeterminedGroups.remove(clickedIndex * 2);
+                    break;
+            }
+            if (refreshView) {
+                inv = Inventories.getPredeterminedMenu(scrollAmount);
+                ((Player) event.getWhoClicked()).openInventory(inv);
+            }
+            return;
+        }
+
+        if (!gameStarted && event.getView().getTitle().startsWith("Create Predetermined Group")) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() == null) {
+                return;
+            }
+            UUID lastSelectedUUID = null;
+            if (event.getInventory().getItem(53) != null) {
+                lastSelectedUUID = ((SkullMeta) event.getInventory().getItem(53).getItemMeta()).getOwningPlayer().getUniqueId();
+            }
+            UUID selectedUUID = null;
+            switch (event.getCurrentItem().getType()) {
+                case PLAYER_HEAD:
+                    selectedUUID = ((SkullMeta) event.getCurrentItem().getItemMeta()).getOwningPlayer().getUniqueId();
+                    if (lastSelectedUUID != null && selectedUUID != null) {
+                        GameData.predeterminedGroups.add(selectedUUID);
+                        GameData.predeterminedGroups.add(lastSelectedUUID);
+                        inv = Inventories.getPredeterminedMenu(0);
+                        ((Player) event.getWhoClicked()).openInventory(inv);
+                    } else {
+                        inv = Inventories.createPredeterminedTeam(selectedUUID);
+                        ((Player) event.getWhoClicked()).openInventory(inv);
+                    }
+                    break;
+            }
         }
     }
 

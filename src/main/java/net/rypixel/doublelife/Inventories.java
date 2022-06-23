@@ -5,11 +5,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class Inventories {
 
@@ -44,8 +47,16 @@ public class Inventories {
         inv.setItem(3, getItem(Material.NETHER_STAR, "Manage Lives", lore));
         lore.clear();
 
+//        lore.add("Manage the amount of");
+//        lore.add("starting lives each");
+//        lore.add("team has");
+        inv.setItem(3, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
+        lore.clear();
+
         return inv;
     }
+
+
 
     public static Inventory getPredeterminedMenu(int scrollAmount) {
         Inventory inv = Bukkit.createInventory(null, 54, "Predetermined Groups - " + scrollAmount);
@@ -53,18 +64,55 @@ public class Inventories {
         ArrayList<String> lore = new ArrayList<>();
 
         for (int i = 0; i < 5; i++) {
-            if (GameData.predeterminedGroups.size() > scrollAmount * 2) {
-                inv.setItem(i * 9, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get(scrollAmount * 2)).getName(), lore));
-                inv.setItem(i * 9 + 1, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get(scrollAmount * 2 + 1)).getName(), lore));
+            if (GameData.predeterminedGroups.size() > (scrollAmount + i) * 2) {
+                inv.setItem(i * 9 + 1, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get((scrollAmount + i) * 2)).getName(), lore));
+                inv.setItem(i * 9 + 3, getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(GameData.predeterminedGroups.get((scrollAmount + i) * 2 + 1)).getName(), lore));
                 inv.setItem(i * 9 + 8, getItem(Material.BARRIER, "Remove Group", lore));
             }
         }
 
-        if ((scrollAmount + 5) * 2 < GameData.predeterminedGroups.size()) {
-            inv.setItem(53, getItem(Material.DIAMOND, "Up", lore));
+        if ((scrollAmount) * 2 < GameData.predeterminedGroups.size()) {
+            inv.setItem(53, getItem(Material.DIAMOND, "Down", lore));
         }
         if (scrollAmount > 0) {
-            inv.setItem(52, getItem(Material.COAL, "Down", lore));
+            inv.setItem(52, getItem(Material.COAL, "Up", lore));
+        }
+        inv.setItem(51, getItem(Material.NETHER_STAR, "Add Team", lore));
+
+        return inv;
+    }
+
+    public static Inventory createPredeterminedTeam(UUID uuid) {
+        Inventory inv = Bukkit.createInventory(null, 54, "Create Predetermined Group");
+
+        ArrayList<String> lore = new ArrayList<>();
+        int i = 0;
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (GameData.predeterminedGroups.contains(p.getUniqueId())) {
+                continue;
+            }
+            if (p.getUniqueId() == uuid) {
+                continue;
+            }
+            ItemStack head = getItem(Material.PLAYER_HEAD, p.getDisplayName(), lore);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            meta.setOwningPlayer(p);
+            head.setItemMeta(meta);
+
+            inv.setItem(i, head);
+
+            i += 1;
+            if (i == 45) {
+                break;
+            }
+        }
+
+        if (uuid != null) {
+            ItemStack head = getItem(Material.PLAYER_HEAD, Bukkit.getOfflinePlayer(uuid).getName(), lore);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            meta.setOwningPlayer(Bukkit.getOfflinePlayer(uuid));
+            head.setItemMeta(meta);
+            inv.setItem(53, head);
         }
 
         return inv;
