@@ -139,11 +139,10 @@ public class GameData implements Serializable {
 
         if (predeterminedGroups.size() > 0) {
             for (int i = 0; i < playerCount; i += 2) {
-                random = new Random();
                 UUID player1 = predeterminedGroups.get(0);
-                participatingPlayers.remove(player1);
-                random = new Random();
+                predeterminedGroups.remove(player1);
                 UUID player2 = predeterminedGroups.get(0);
+                predeterminedGroups.remove(player2);
                 UserPair pair = new UserPair(player1, player2, isSharingHunger, startingLives);
                 gameData.uuidUserPair.put(player1, pair);
                 gameData.uuidUserPair.put(player2, pair);
