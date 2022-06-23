@@ -26,7 +26,7 @@ public class GameData implements Serializable {
     public static boolean tellSoulmate = false;
     public static int startingLives = 3;
     public static boolean canCraftEnchantingTableStatic = true;
-    public static boolean lifeCountEnabled = false;
+    public static boolean lifeCountEnabled = true;
 
     public boolean canCraftEnchantingTable = true;
 
