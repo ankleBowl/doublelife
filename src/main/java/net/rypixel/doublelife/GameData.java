@@ -232,7 +232,11 @@ class UserPair implements Serializable {
             if (tookDamage) {
                 tPlayer.playEffect(EntityEffect.HURT);
             }
-            tPlayer.setHealth(sharedHealth);
+            try {
+                tPlayer.setHealth(sharedHealth);
+            } catch (Exception e) {
+
+            }
         }
         tPlayer = Bukkit.getPlayer(player2);
         if (tPlayer != null) {
