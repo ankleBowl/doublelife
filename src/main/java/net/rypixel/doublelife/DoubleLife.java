@@ -119,6 +119,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     gameDataExists = true;
                     break;
                 case "settings":
+                    if (GameData.needDataReentryAfterUpdateForVersion2) {
+                        Inventory inv = Inventories.getSettingsMenu();
+                        ((Player) sender).openInventory(inv);
+                    }
                     if (!(sender instanceof Player)) {
                         return false;
                     }
@@ -206,6 +210,16 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             oneLife.addPlayer(event.getPlayer());
         } else {
             dead.addPlayer(event.getPlayer());
+        }
+
+
+        //Special version 1 to version 2 upgrading stuffs
+        if (GameData.needDataReentryAfterUpdateForVersion2) {
+            if (event.getPlayer().isOp()) {
+                event.getPlayer().sendMessage("You've updated DoubleLife from version < 1.1.0. More details were added to the save file in this version. Please use /doublelife settings and resubmit your settings from first use.");
+                event.getPlayer().sendMessage("---------------------------");
+                event.getPlayer().sendMessage("Why was the save file changed? This was to allow players to join after the first start, but still have the correct settings");
+            }
         }
     }
 

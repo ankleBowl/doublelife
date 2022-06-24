@@ -30,12 +30,17 @@ public class GameData implements Serializable {
 
     public boolean canCraftEnchantingTable = true;
 
+
+
+    public static boolean needDataReentryAfterUpdateForVersion2 = false;
+
     GameData() {
 
     }
 
     public void saveData() {
-        int saveVersion = 1;
+        int saveVersion = 2;
+
         String output = "";
         output += String.valueOf(saveVersion) + "\n";
 
@@ -50,7 +55,7 @@ public class GameData implements Serializable {
             output += pair.player1.toString() + "," + pair.player2.toString() + "," + pair.isSharingHunger + "," + pair.sharedHunger + "," + pair.sharedLives + "," + pair.sharedHealth + "~";
         }
         output = output.substring(0, output.length() - 1) + "\n";
-        output += canCraftEnchantingTable;
+        output += canCraftEnchantingTable + "\n" + announceSoulmate + "\n" + tellSoulmate + "\n" + startingLives;
 
         String path = Path.of(Bukkit.getWorlds().get(0).getWorldFolder().getPath(), "save.doublelife").toString();
 
@@ -78,26 +83,36 @@ public class GameData implements Serializable {
             String input = new String(Files.readAllBytes(Paths.get(path)));
             String[] sections = input.split("\n");
             Integer versionNumber = Integer.valueOf(sections[0]);
-            String[] pairs = sections[1].split("~");
-            boolean canCraftEnchantingTables = Boolean.valueOf(sections[2]);
+            if (versionNumber == 1 || versionNumber == 2) {
+                String[] pairs = sections[1].split("~");
+                boolean canCraftEnchantingTables = Boolean.valueOf(sections[2]);
 
-            data.canCraftEnchantingTable = canCraftEnchantingTables;
+                data.canCraftEnchantingTable = canCraftEnchantingTables;
 
-            for (String str : pairs) {
-                String[] parts = str.split(",");
-                UUID player1 = UUID.fromString(parts[0]);
-                UUID player2 = UUID.fromString(parts[1]);
-                boolean isSharingHunger = Boolean.valueOf(parts[2]);
-                double sharedHunger = Double.valueOf(parts[3]);
-                int sharedLives = Integer.valueOf(parts[4]);
-                double sharedHealth = Double.valueOf(parts[5]);
+                for (String str : pairs) {
+                    String[] parts = str.split(",");
+                    UUID player1 = UUID.fromString(parts[0]);
+                    UUID player2 = UUID.fromString(parts[1]);
+                    boolean isSharingHunger = Boolean.valueOf(parts[2]);
+                    double sharedHunger = Double.valueOf(parts[3]);
+                    int sharedLives = Integer.valueOf(parts[4]);
+                    double sharedHealth = Double.valueOf(parts[5]);
 
-                UserPair pair = new UserPair(player1, player2, isSharingHunger, sharedLives);
-                pair.sharedHunger = sharedHunger;
-                pair.sharedHealth = sharedHealth;
+                    UserPair pair = new UserPair(player1, player2, isSharingHunger, sharedLives);
+                    pair.sharedHunger = sharedHunger;
+                    pair.sharedHealth = sharedHealth;
 
-                data.uuidUserPair.put(player1, pair);
-                data.uuidUserPair.put(player2, pair);
+                    data.uuidUserPair.put(player1, pair);
+                    data.uuidUserPair.put(player2, pair);
+                }
+
+                if (versionNumber > 1) {
+                    announceSoulmate = Boolean.valueOf(sections[3]);
+                    tellSoulmate = Boolean.valueOf(sections[4]);
+                    startingLives = Integer.valueOf(sections[5]);
+                } else {
+                    needDataReentryAfterUpdateForVersion2 = true;
+                }
             }
             return data;
         } catch (Exception e) {
@@ -186,6 +201,20 @@ public class GameData implements Serializable {
         }.runTaskLater(plugin, 100L);
 
         return gameData;
+    }
+
+    public void refreshPlayers() {
+        ArrayList<Player> unlinkedPlayers = new ArrayList<>();
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!uuidUserPair.containsKey(p.getUniqueId())) {
+                unlinkedPlayers.add(p);
+            }
+        }
+        if (unlinkedPlayers.size() % 2 != 0) {
+            return;
+        }
+
+
     }
 }
 
