@@ -123,16 +123,25 @@ public class GameData implements Serializable {
         }
     }
 
-    public static GameData createData() {
+    public static GameData createData(boolean gameStarted, GameData gameData) {
         ArrayList<Player> participatingPlayers = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (predeterminedGroups.contains(p)) {
                 continue;
             }
+
+            if (gameStarted) {
+                if (gameData.uuidUserPair.containsKey(p.getUniqueId())) {
+                    continue;
+                }
+            }
+
             participatingPlayers.add(p);
         }
 
-        GameData gameData = new GameData();
+        if (!gameStarted) {
+            gameData = new GameData();
+        }
         gameData.canCraftEnchantingTable = GameData.canCraftEnchantingTableStatic;
 
         if (!lifeCountEnabled) {
@@ -174,10 +183,11 @@ public class GameData implements Serializable {
         }
 
 
+        GameData finalGameData = gameData;
         new BukkitRunnable() {
             public void run() {
-                for (Map.Entry<UUID, UserPair> entry : gameData.uuidUserPair.entrySet()) {
-                    if (gameData.tellSoulmate) {
+                for (Map.Entry<UUID, UserPair> entry : finalGameData.uuidUserPair.entrySet()) {
+                    if (finalGameData.tellSoulmate) {
                         UUID otherPlayer = entry.getValue().player1;
                         if (otherPlayer == entry.getKey()) {
                             otherPlayer = entry.getValue().player2;
@@ -188,11 +198,11 @@ public class GameData implements Serializable {
                     }
                 }
 
-                if (gameData.announceSoulmate) {
+                if (finalGameData.announceSoulmate) {
                     Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "---------------");
                     Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Teams:");
                     ArrayList<UserPair> saidPairs = new ArrayList<>();
-                    for (Map.Entry<UUID, UserPair> entry : gameData.uuidUserPair.entrySet()) {
+                    for (Map.Entry<UUID, UserPair> entry : finalGameData.uuidUserPair.entrySet()) {
                         UserPair pair = entry.getValue();
                         if (saidPairs.contains(pair)) {
                             continue;

@@ -98,7 +98,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     if (gameDataExists) {
                         return true;
                     }
-                    gameData = GameData.createData();
+                    gameData = GameData.createData(gameStarted, gameData);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
                         if (pair.getValue().sharedLives > 3) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
@@ -119,14 +119,15 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     gameDataExists = true;
                     break;
                 case "settings":
+                    if (!(sender instanceof Player)) {
+                        return false;
+                    }
                     if (GameData.needDataReentryAfterUpdateForVersion2) {
                         Inventory inv = Inventories.getSettingsMenu();
                         ((Player) sender).openInventory(inv);
                     }
-                    if (!(sender instanceof Player)) {
-                        return false;
-                    }
                     if (gameStarted) {
+                        sender.sendMessage("Because the game has already begun, settings such as life count will only apply for new players");
                         return false;
                     }
                     Inventory inv = Inventories.getSettingsMenu();
@@ -137,7 +138,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         sender.sendMessage("\"This command will remove all save data for DoubleLife. Please run /doublelife restart confirm to allow this.\"");
                     }
                     gameStarted = true;
-                    gameData = GameData.createData();
+                    gameData = GameData.createData(gameStarted, gameData);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
                         if (pair.getValue().sharedLives > 3) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
@@ -189,7 +190,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         sender.sendMessage(ChatColor.RED + "The game must be started to refresh!");
                         return false;
                     }
-                    gameData.refreshPlayers();
+                    gameData = GameData.createData(gameStarted, gameData);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
                         if (pair.getValue().sharedLives > 3) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
@@ -409,7 +410,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             switch (event.getCurrentItem().getType()) {
                 case NETHER_STAR:
                     refreshView = false;
-                    inv = Inventories.createPredeterminedTeam(null);
+                    inv = Inventories.createPredeterminedTeam(null, gameStarted, gameData);
                     ((Player) event.getWhoClicked()).openInventory(inv);
                     break;
                 case COAL:
@@ -454,7 +455,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         inv = Inventories.getPredeterminedMenu(0);
                         ((Player) event.getWhoClicked()).openInventory(inv);
                     } else {
-                        inv = Inventories.createPredeterminedTeam(selectedUUID);
+                        inv = Inventories.createPredeterminedTeam(selectedUUID, gameStarted, gameData);
                         ((Player) event.getWhoClicked()).openInventory(inv);
                     }
                     break;

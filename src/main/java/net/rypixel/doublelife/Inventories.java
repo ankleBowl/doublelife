@@ -94,7 +94,7 @@ public class Inventories {
         return inv;
     }
 
-    public static Inventory createPredeterminedTeam(UUID uuid) {
+    public static Inventory createPredeterminedTeam(UUID uuid, boolean gameStarted, GameData gameData) {
         Inventory inv = Bukkit.createInventory(null, 54, "Create Predetermined Group");
 
         ArrayList<String> lore = new ArrayList<>();
@@ -105,6 +105,11 @@ public class Inventories {
             }
             if (p.getUniqueId() == uuid) {
                 continue;
+            }
+            if (gameStarted) {
+                if (gameData.uuidUserPair.containsKey(p.getUniqueId())) {
+                    continue;
+                }
             }
             ItemStack head = getItem(Material.PLAYER_HEAD, p.getDisplayName(), lore);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
