@@ -346,7 +346,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
 //                    for showing in chat
                     break;
                 case ENCHANTING_TABLE:
-                    GameData.canCraftEnchantingTableStatic = !GameData.canCraftEnchantingTableStatic;
+                    GameData.canCraftEnchantingTable = !GameData.canCraftEnchantingTable;
+                    break;
+                case TNT:
+                    GameData.customTntRecipe = !GameData.customTntRecipe;
                     break;
                 case NETHER_STAR:
                     inv = Inventories.getLifeCountManager();

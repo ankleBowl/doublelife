@@ -25,11 +25,11 @@ public class GameData implements Serializable {
     public static boolean announceSoulmate = false;
     public static boolean tellSoulmate = false;
     public static int startingLives = 3;
-    public static boolean canCraftEnchantingTableStatic = true;
+    public static boolean canCraftEnchantingTable = true;
     public static boolean lifeCountEnabled = true;
     public static boolean isSharingHunger = false;
+    public static boolean customTntRecipe = true;
 
-    public boolean canCraftEnchantingTable = true;
 
 
 
@@ -40,7 +40,7 @@ public class GameData implements Serializable {
     }
 
     public void saveData() {
-        int saveVersion = 2;
+        int saveVersion = 3;
 
         String output = "";
         output += String.valueOf(saveVersion) + "\n";
@@ -56,7 +56,7 @@ public class GameData implements Serializable {
             output += pair.player1.toString() + "," + pair.player2.toString() + "," + pair.isSharingHunger + "," + pair.sharedHunger + "," + pair.sharedLives + "," + pair.sharedHealth + "~";
         }
         output = output.substring(0, output.length() - 1) + "\n";
-        output += canCraftEnchantingTable + "\n" + announceSoulmate + "\n" + tellSoulmate + "\n" + startingLives;
+        output += canCraftEnchantingTable + "\n" + announceSoulmate + "\n" + tellSoulmate + "\n" + startingLives + "\n" + customTntRecipe;
 
         String path = Path.of(Bukkit.getWorlds().get(0).getWorldFolder().getPath(), "save.doublelife").toString();
 
@@ -84,7 +84,7 @@ public class GameData implements Serializable {
             String input = new String(Files.readAllBytes(Paths.get(path)));
             String[] sections = input.split("\n");
             Integer versionNumber = Integer.valueOf(sections[0]);
-            if (versionNumber == 1 || versionNumber == 2) {
+            if (versionNumber == 1 || versionNumber == 2 || versionNumber == 3) {
                 String[] pairs = sections[1].split("~");
                 boolean canCraftEnchantingTables = Boolean.valueOf(sections[2]);
 
@@ -111,6 +111,10 @@ public class GameData implements Serializable {
                     announceSoulmate = Boolean.valueOf(sections[3]);
                     tellSoulmate = Boolean.valueOf(sections[4]);
                     startingLives = Integer.valueOf(sections[5]);
+
+                    if (versionNumber > 2) {
+                        customTntRecipe = Boolean.valueOf(sections[6]);
+                    }
                 } else {
                     needDataReentryAfterUpdateForVersion2 = true;
                 }
@@ -142,7 +146,6 @@ public class GameData implements Serializable {
         if (!gameStarted) {
             gameData = new GameData();
         }
-        gameData.canCraftEnchantingTable = GameData.canCraftEnchantingTableStatic;
 
         if (!lifeCountEnabled) {
             startingLives = -99;
