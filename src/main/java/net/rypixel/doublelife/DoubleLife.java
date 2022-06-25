@@ -98,7 +98,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     if (gameDataExists) {
                         return true;
                     }
-                    gameData = GameData.createData(isSharingHunger);
+                    gameData = GameData.createData();
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
                         if (pair.getValue().sharedLives > 3) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
@@ -137,10 +137,22 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         sender.sendMessage("\"This command will remove all save data for DoubleLife. Please run /doublelife restart confirm to allow this.\"");
                     }
                     gameStarted = true;
-                    gameData = GameData.createData(isSharingHunger);
+                    gameData = GameData.createData();
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
-                        threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
-                        threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        if (pair.getValue().sharedLives > 3) {
+                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else if (pair.getValue().sharedLives == 2) {
+                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else if (pair.getValue().sharedLives == 1) {
+                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else {
+                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        }
+
                     }
                     gameData.saveData();
                     gameDataExists = true;
@@ -172,12 +184,36 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         gameFrozen = false;
                     }
                     break;
+                case "refresh":
+                    if (!gameStarted) {
+                        sender.sendMessage(ChatColor.RED + "The game must be started to refresh!");
+                        return false;
+                    }
+                    gameData.refreshPlayers();
+                    for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
+                        if (pair.getValue().sharedLives > 3) {
+                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else if (pair.getValue().sharedLives == 2) {
+                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else if (pair.getValue().sharedLives == 1) {
+                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        } else {
+                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+                        }
+
+                    }
+                    gameData.saveData();
+                    break;
                 case "help":
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
-                        p.sendMessage("Usage: /doublelife [start/settings/stop/restart/help]");
+                        p.sendMessage("Usage: /doublelife [start/settings/stop/restart/freeze/help]");
                     } else {
-                        Bukkit.getLogger().info("Usage: /doublelife [start/stop/restart/help]");
+                        Bukkit.getLogger().info("Usage: /doublelife [start/stop/restart/freeze/help]");
                         Bukkit.getLogger().info("To view settings, run this command on a Minecraft client");
                     }
                     break;
@@ -256,30 +292,34 @@ public final class DoubleLife extends JavaPlugin implements Listener {
 
     public void onHealthChange(Player p, double newHealth) {
         UUID playerUUID = p.getUniqueId();
-        gameData.uuidUserPair.get(playerUUID).setHealth(newHealth);
+        if (gameData.uuidUserPair.containsKey(playerUUID)) {
+            gameData.uuidUserPair.get(playerUUID).setHealth(newHealth);
+        }
     }
 
     public void killPlayers(Player p) {
         UUID playerUUID = p.getUniqueId();
-        UserPair pair = gameData.uuidUserPair.get(playerUUID);
-        pair.killPlayers(p);
-        if (pair.sharedLives > 2) {
-            return;
-        } else if (pair.sharedLives == 2) {
-            threeLives.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
-            threeLives.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
-            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
-            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
-        } else if (gameData.uuidUserPair.get(playerUUID).sharedLives == 1) {
-            twoLives.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
-            twoLives.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
-            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
-            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
-        } else {
-            oneLife.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
-            oneLife.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
-            dead.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
-            dead.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
+        if (gameData.uuidUserPair.containsKey(playerUUID)) {
+            UserPair pair = gameData.uuidUserPair.get(playerUUID);
+            pair.killPlayers(p);
+            if (pair.sharedLives > 2) {
+                return;
+            } else if (pair.sharedLives == 2) {
+                threeLives.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
+                threeLives.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
+                twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
+                twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
+            } else if (gameData.uuidUserPair.get(playerUUID).sharedLives == 1) {
+                twoLives.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
+                twoLives.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
+                oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
+                oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
+            } else {
+                oneLife.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
+                oneLife.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
+                dead.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
+                dead.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
+            }
         }
     }
 
@@ -290,7 +330,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         Inventory inv = null;
-        if (!gameStarted && event.getView().getTitle().equalsIgnoreCase("Settings")) {
+        if (event.getView().getTitle().equalsIgnoreCase("Settings")) {
             event.setCancelled(true);
             if (event.getCurrentItem() == null) {
                 return;
@@ -326,7 +366,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
 
-        if (!gameStarted && event.getView().getTitle().equalsIgnoreCase("Settings - Life Count")) {
+        if (event.getView().getTitle().equalsIgnoreCase("Settings - Life Count")) {
             event.setCancelled(true);
             if (event.getCurrentItem() == null) {
                 return;
@@ -359,7 +399,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
 
-        if (!gameStarted && event.getView().getTitle().startsWith("Predetermined Groups - ")) {
+        if (event.getView().getTitle().startsWith("Predetermined Groups - ")) {
             event.setCancelled(true);
             if (event.getCurrentItem() == null) {
                 return;
@@ -395,7 +435,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
 
-        if (!gameStarted && event.getView().getTitle().startsWith("Create Predetermined Group")) {
+        if (event.getView().getTitle().startsWith("Create Predetermined Group")) {
             event.setCancelled(true);
             if (event.getCurrentItem() == null) {
                 return;
