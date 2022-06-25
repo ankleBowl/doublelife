@@ -27,6 +27,7 @@ public class GameData implements Serializable {
     public static int startingLives = 3;
     public static boolean canCraftEnchantingTableStatic = true;
     public static boolean lifeCountEnabled = true;
+    public static boolean isSharingHunger = false;
 
     public boolean canCraftEnchantingTable = true;
 
@@ -122,7 +123,7 @@ public class GameData implements Serializable {
         }
     }
 
-    public static GameData createData(boolean isSharingHunger) {
+    public static GameData createData() {
         ArrayList<Player> participatingPlayers = new ArrayList<>();
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (predeterminedGroups.contains(p)) {
@@ -136,6 +137,10 @@ public class GameData implements Serializable {
 
         if (!lifeCountEnabled) {
             startingLives = -99;
+        }
+
+        if (participatingPlayers.size() % 2 != 0) {
+            participatingPlayers.remove(0);
         }
 
         Random random;
@@ -211,10 +216,57 @@ public class GameData implements Serializable {
             }
         }
         if (unlinkedPlayers.size() % 2 != 0) {
-            return;
+            unlinkedPlayers.remove(0);
         }
 
 
+        Random random;
+        final int playerCount = unlinkedPlayers.size();
+        for (int i = 0; i < playerCount; i += 2) {
+            random = new Random();
+            Player player1 = unlinkedPlayers.get(random.nextInt(unlinkedPlayers.size()));
+            unlinkedPlayers.remove(player1);
+            random = new Random();
+            Player player2 = unlinkedPlayers.get(random.nextInt(unlinkedPlayers.size()));
+            unlinkedPlayers.remove(player2);
+            UserPair pair = new UserPair(player1.getUniqueId(), player2.getUniqueId(), isSharingHunger, startingLives);
+            uuidUserPair.put(player1.getUniqueId(), pair);
+            uuidUserPair.put(player2.getUniqueId(), pair);
+        }
+
+        for (Player p : unlinkedPlayers) {
+            p.sendTitle(ChatColor.GREEN + "Your soulmate is...", "", 20, 80, 0);
+        }
+        new BukkitRunnable() {
+            public void run() {
+                for (Player p : unlinkedPlayers) {
+                    UserPair pair = uuidUserPair.get(p.getUniqueId());
+                    if (tellSoulmate) {
+                        UUID otherPlayer = pair.player1;
+                        if (otherPlayer == p.getUniqueId()) {
+                            otherPlayer = pair.player2;
+                        }
+                        p.sendTitle(ChatColor.GREEN + Bukkit.getPlayer(otherPlayer).getDisplayName(), "", 0, 40, 20);
+                    } else {
+                        p.sendTitle(ChatColor.GREEN + "??????", "", 0, 40, 20);
+                    }
+                }
+                if (announceSoulmate) {
+                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "---------------");
+                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Teams:");
+                    ArrayList<UserPair> saidPairs = new ArrayList<>();
+                    for (Map.Entry<UUID, UserPair> entry : uuidUserPair.entrySet()) {
+                        UserPair pair = entry.getValue();
+                        if (saidPairs.contains(pair)) {
+                            continue;
+                        }
+                        saidPairs.add(pair);
+                        Bukkit.broadcastMessage(ChatColor.GREEN + Bukkit.getOfflinePlayer(pair.player1).getName() + " and " + Bukkit.getOfflinePlayer(pair.player2).getName());
+                    }
+                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "---------------");
+                }
+            }
+        }.runTaskLater(plugin, 100L);
     }
 }
 
