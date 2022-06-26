@@ -2,6 +2,8 @@ package net.rypixel.doublelife;
 
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
@@ -119,6 +121,17 @@ public class GameData implements Serializable {
                     needDataReentryAfterUpdateForVersion2 = true;
                 }
             }
+
+            if (customTntRecipe) {
+                NamespacedKey key = new NamespacedKey(plugin, "custom_tnt");
+                ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(Material.TNT));
+                recipe.shape("PSP", "SGS", "PSP");
+                recipe.setIngredient('P', Material.PAPER);
+                recipe.setIngredient('S', Material.SAND);
+                recipe.setIngredient('G', Material.GUNPOWDER);
+                Bukkit.addRecipe(recipe);
+            }
+
             return data;
         } catch (Exception e) {
             e.printStackTrace();
@@ -145,6 +158,16 @@ public class GameData implements Serializable {
 
         if (!gameStarted) {
             gameData = new GameData();
+
+            if (customTntRecipe) {
+                NamespacedKey key = new NamespacedKey(plugin, "custom_tnt");
+                ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(Material.TNT));
+                recipe.shape("PSP", "SGS", "PSP");
+                recipe.setIngredient('P', Material.PAPER);
+                recipe.setIngredient('S', Material.SAND);
+                recipe.setIngredient('G', Material.GUNPOWDER);
+                Bukkit.addRecipe(recipe);
+            }
         }
 
         if (!lifeCountEnabled) {
@@ -184,7 +207,6 @@ public class GameData implements Serializable {
         for (Map.Entry<UUID, UserPair> entry : gameData.uuidUserPair.entrySet()) {
             Bukkit.getPlayer(entry.getKey()).sendTitle(ChatColor.GREEN + "Your soulmate is...", "", 20, 80, 0);
         }
-
 
         GameData finalGameData = gameData;
         new BukkitRunnable() {

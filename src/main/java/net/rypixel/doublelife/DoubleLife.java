@@ -18,6 +18,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scoreboard.Scoreboard;
@@ -94,11 +96,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     if (gameStarted) {
                         return false;
                     }
-                    gameStarted = true;
                     if (gameDataExists) {
                         return true;
                     }
-                    gameData = GameData.createData(gameStarted, gameData);
+                    gameData = GameData.createData(gameStarted, null);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
                         if (pair.getValue().sharedLives > 3) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
@@ -115,6 +116,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         }
 
                     }
+                    gameStarted = true;
                     gameData.saveData();
                     gameDataExists = true;
                     break;
@@ -128,7 +130,6 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     }
                     if (gameStarted) {
                         sender.sendMessage("Because the game has already begun, settings such as life count will only apply for new players");
-                        return false;
                     }
                     Inventory inv = Inventories.getSettingsMenu();
                     ((Player) sender).openInventory(inv);
@@ -140,7 +141,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     gameStarted = true;
                     gameData = GameData.createData(gameStarted, gameData);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
-                        if (pair.getValue().sharedLives > 3) {
+                        if (pair.getValue().sharedLives > 2) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
                         } else if (pair.getValue().sharedLives == 2) {
@@ -192,7 +193,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     }
                     gameData = GameData.createData(gameStarted, gameData);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
-                        if (pair.getValue().sharedLives > 3) {
+                        if (pair.getValue().sharedLives > 2) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
                         } else if (pair.getValue().sharedLives == 2) {
@@ -468,8 +469,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerCraft(CraftItemEvent event) {
-        if (gameStarted && event.getRecipe().getResult().getType() == Material.ENCHANTING_TABLE && gameData.canCraftEnchantingTable) {
-            event.setCancelled(true);
+        if (gameStarted) {
+            if (event.getRecipe().getResult().getType() == Material.ENCHANTING_TABLE && !GameData.canCraftEnchantingTable) {
+                event.setCancelled(true);
+            }
         }
     }
 
