@@ -107,6 +107,8 @@ public class GameData implements Serializable {
 
                     data.uuidUserPair.put(player1, pair);
                     data.uuidUserPair.put(player2, pair);
+
+                    GameData.isSharingHunger = isSharingHunger;
                 }
 
                 if (versionNumber > 1) {
