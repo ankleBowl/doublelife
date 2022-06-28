@@ -23,6 +23,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.spigotmc.event.entity.EntityMountEvent;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -354,6 +355,17 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case COOKED_BEEF:
                     GameData.isSharingHunger = !GameData.isSharingHunger;
+                    if (gameDataExists) {
+                        ArrayList<UserPair> userPairs = new ArrayList<>();
+                        for (Map.Entry<UUID, UserPair> entry : gameData.uuidUserPair.entrySet()) {
+                            if (!userPairs.contains(entry.getValue())) {
+                                userPairs.add(entry.getValue());
+                            }
+                        }
+                        for (UserPair pair : userPairs) {
+                            pair.isSharingHunger = GameData.isSharingHunger;
+                        }
+                    }
                     break;
                 case NETHER_STAR:
                     inv = Inventories.getLifeCountManager();
