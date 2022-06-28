@@ -49,7 +49,7 @@ public class Inventories {
 
         lore.add("Allows the pairs to");
         lore.add("share a hunger bar");
-        inv.setItem(3, getItem(Material.COOKED_BEEF, "Hunger Sharing", GameData.isSharingHunger, lore));
+        inv.setItem(4, getItem(Material.COOKED_BEEF, "Hunger Sharing", GameData.isSharingHunger, lore));
         lore.clear();
 
         lore.add("Manage the amount of");
