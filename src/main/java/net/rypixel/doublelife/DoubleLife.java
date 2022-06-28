@@ -98,7 +98,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     }
                     gameData = GameData.createData(gameStarted, null);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
-                        if (pair.getValue().sharedLives > 3) {
+                        if (pair.getValue().sharedLives > 2) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
                         } else if (pair.getValue().sharedLives == 2) {
@@ -230,6 +230,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         }
         UUID playerUUID = event.getPlayer().getUniqueId();
         UserPair userPair = gameData.uuidUserPair.get(playerUUID);
+        if (userPair == null) {
+            return;
+        }
         userPair.refreshPlayers();
         if (userPair.sharedLives == -1) {
             event.getPlayer().setScoreboard(null);
@@ -520,7 +523,8 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             Player hungerChanged = (Player) event.getEntity();
             UserPair pair = gameData.uuidUserPair.get(hungerChanged.getUniqueId());
             if (pair != null) {
-
+                event.setCancelled(true);
+                pair.setHunger(event.getFoodLevel());
             }
         }
     }
