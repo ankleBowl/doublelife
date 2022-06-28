@@ -386,15 +386,25 @@ class UserPair implements Serializable {
         Player tPlayer = Bukkit.getPlayer(player1);
         if (tPlayer != null) {
             tPlayer.setHealth(sharedHealth);
+            tPlayer.setFoodLevel((int) sharedHunger);
         }
         tPlayer = Bukkit.getPlayer(player2);
         if (tPlayer != null) {
             tPlayer.setHealth(sharedHealth);
+            tPlayer.setFoodLevel((int) sharedHunger);
         }
     }
 
     public void setHunger(int newHunger) {
-
+        sharedHunger = newHunger;
+        Player tPlayer = Bukkit.getPlayer(player1);
+        if (tPlayer != null) {
+            tPlayer.setFoodLevel(newHunger);
+        }
+        tPlayer = Bukkit.getPlayer(player2);
+        if (tPlayer != null) {
+            tPlayer.setFoodLevel(newHunger);
+        }
     }
 
 }
