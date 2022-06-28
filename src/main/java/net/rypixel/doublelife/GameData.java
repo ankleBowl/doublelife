@@ -392,4 +392,9 @@ class UserPair implements Serializable {
             tPlayer.setHealth(sharedHealth);
         }
     }
+
+    public void setHunger(int newHunger) {
+
+    }
+
 }

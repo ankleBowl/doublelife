@@ -8,10 +8,7 @@ import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityRegainHealthEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -270,7 +267,6 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (event.getEntity() instanceof Player) {
             if (((Player) event.getEntity()).getHealth() - event.getFinalDamage() <= 0) {
                 killPlayers((Player) event.getEntity());
-//                event.setCancelled(true);
             } else {
                 onHealthChange((Player) event.getEntity(), ((Player) event.getEntity()).getHealth() - event.getFinalDamage());
                 event.setDamage(0);
@@ -352,6 +348,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case TNT:
                     GameData.customTntRecipe = !GameData.customTntRecipe;
+                    break;
+                case COOKED_BEEF:
+                    GameData.isSharingHunger = !GameData.isSharingHunger;
                     break;
                 case NETHER_STAR:
                     inv = Inventories.getLifeCountManager();
@@ -512,6 +511,17 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     public void onEntityTarget(EntityTargetEvent event) {
         if (gameFrozen) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (gameStarted) {
+            Player hungerChanged = (Player) event.getEntity();
+            UserPair pair = gameData.uuidUserPair.get(hungerChanged.getUniqueId());
+            if (pair != null) {
+
+            }
         }
     }
 }

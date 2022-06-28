@@ -47,15 +47,20 @@ public class Inventories {
         inv.setItem(3, getItem(Material.TNT, "Custom TNT Recipe", GameData.canCraftEnchantingTable, lore));
         lore.clear();
 
+        lore.add("Allows the pairs to");
+        lore.add("share a hunger bar");
+        inv.setItem(3, getItem(Material.COOKED_BEEF, "Hunger Sharing", GameData.isSharingHunger, lore));
+        lore.clear();
+
         lore.add("Manage the amount of");
         lore.add("starting lives each");
         lore.add("team has");
-        inv.setItem(4, getItem(Material.NETHER_STAR, "Manage Lives", lore));
+        inv.setItem(5, getItem(Material.NETHER_STAR, "Manage Lives", lore));
         lore.clear();
 
         lore.add("Manage the predetermined");
         lore.add("starting teams");
-        inv.setItem(5, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
+        inv.setItem(6, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
         lore.clear();
 
         return inv;
