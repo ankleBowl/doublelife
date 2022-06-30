@@ -148,7 +148,6 @@ public class GameData implements Serializable {
             if (predeterminedGroups.contains(p)) {
                 continue;
             }
-
             if (gameStarted) {
                 if (gameData.uuidUserPair.containsKey(p.getUniqueId())) {
                     continue;
@@ -162,13 +161,17 @@ public class GameData implements Serializable {
             gameData = new GameData();
 
             if (customTntRecipe) {
-                NamespacedKey key = new NamespacedKey(plugin, "custom_tnt");
-                ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(Material.TNT));
-                recipe.shape("PSP", "SGS", "PSP");
-                recipe.setIngredient('P', Material.PAPER);
-                recipe.setIngredient('S', Material.SAND);
-                recipe.setIngredient('G', Material.GUNPOWDER);
-                Bukkit.addRecipe(recipe);
+                try {
+                    NamespacedKey key = new NamespacedKey(plugin, "custom_tnt");
+                    ShapedRecipe recipe = new ShapedRecipe(key, new ItemStack(Material.TNT));
+                    recipe.shape("PSP", "SGS", "PSP");
+                    recipe.setIngredient('P', Material.PAPER);
+                    recipe.setIngredient('S', Material.SAND);
+                    recipe.setIngredient('G', Material.GUNPOWDER);
+                    Bukkit.addRecipe(recipe);
+                } catch (Exception e) {
+
+                }
             }
         }
 
