@@ -157,6 +157,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     }
                     gameData.saveData();
                     gameDataExists = true;
+                    break;
                 case "stop":
                     gameStarted = false;
                     sender.sendMessage(ChatColor.YELLOW + "The game has been paused. Players will take damage normally");
