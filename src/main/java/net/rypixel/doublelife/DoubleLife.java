@@ -335,8 +335,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
         if (event.getEntity() instanceof Player) {
-            onHealthChange((Player) event.getEntity(), ((Player) event.getEntity()).getHealth() + event.getAmount());
-            event.setCancelled(true);
+            if (gameData.uuidUserPair.containsKey(((Player) event.getEntity()).getUniqueId())) {
+                onHealthChange((Player) event.getEntity(), ((Player) event.getEntity()).getHealth() + event.getAmount());
+                event.setCancelled(true);
+            }
         }
     }
 
