@@ -273,11 +273,54 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
         if (event.getEntity() instanceof Player) {
-            if (((Player) event.getEntity()).getHealth() - event.getFinalDamage() <= 0) {
-                killPlayers((Player) event.getEntity());
+            Player p = (Player) event.getEntity();
+
+            Player holdingTotem = null;
+            UUID otherPlayer = null;
+            boolean otherPlayerHoldingTotem = false;
+            if (gameData.uuidUserPair.containsKey(p.getUniqueId())) {
+                UserPair pair = gameData.uuidUserPair.get(p.getUniqueId());
+                if (pair.player1.toString().equals(p.getUniqueId().toString())) {
+                    otherPlayer = pair.player2;
+                } else {
+                    otherPlayer = pair.player1;
+                }
+                if (Bukkit.getPlayer(otherPlayer) != null) {
+                    if (Bukkit.getPlayer(otherPlayer).getInventory().getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING) {
+                        holdingTotem = Bukkit.getPlayer(otherPlayer);
+                        otherPlayerHoldingTotem = true;
+                    } else if (Bukkit.getPlayer(otherPlayer).getInventory().getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING) {
+                        holdingTotem = Bukkit.getPlayer(otherPlayer);
+                        otherPlayerHoldingTotem = true;
+                    }
+                }
+                if (p.getInventory().getItemInMainHand().getType() == Material.TOTEM_OF_UNDYING) {
+                    holdingTotem = p;
+                    otherPlayerHoldingTotem = false;
+                } else if (p.getInventory().getItemInOffHand().getType() == Material.TOTEM_OF_UNDYING) {
+                    holdingTotem = p;
+                    otherPlayerHoldingTotem = false;
+                }
+            }
+
+            if (p.getHealth() - event.getFinalDamage() <= 0) {
+                if (holdingTotem != null) {
+                    if (otherPlayerHoldingTotem == true) {
+                        event.setCancelled(true);
+                    }
+                    UUID playerNotWithTotem = null;
+                    UserPair pair = gameData.uuidUserPair.get(p.getUniqueId());
+                    if (pair.player1.toString().equals(holdingTotem.getUniqueId().toString())) {
+                        playerNotWithTotem = pair.player2;
+                    } else {
+                        playerNotWithTotem = pair.player1;
+                    }
+                    killWithTotem(holdingTotem, playerNotWithTotem, otherPlayerHoldingTotem);
+                } else {
+                    killPlayers(p);
+                }
             } else {
-                onHealthChange((Player) event.getEntity(), ((Player) event.getEntity()).getHealth() - event.getFinalDamage());
-                event.setDamage(0);
+                damagePair(p, event.getFinalDamage());
             }
         }
     }
@@ -300,7 +343,14 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     public void onHealthChange(Player p, double newHealth) {
         UUID playerUUID = p.getUniqueId();
         if (gameData.uuidUserPair.containsKey(playerUUID)) {
-            gameData.uuidUserPair.get(playerUUID).setHealth(newHealth);
+            gameData.uuidUserPair.get(playerUUID).setHealth(newHealth, p);
+        }
+    }
+
+    public void damagePair(Player p, double damageAmount) {
+        UUID playerUUID = p.getUniqueId();
+        if (gameData.uuidUserPair.containsKey(playerUUID)) {
+            gameData.uuidUserPair.get(playerUUID).damage(p, p.getHealth() - damageAmount);
         }
     }
 
@@ -320,6 +370,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                 twoLives.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
                 twoLives.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
                 oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
+                oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
                 oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
             } else {
                 oneLife.removePlayer(Bukkit.getOfflinePlayer(pair.player1));
@@ -327,6 +378,14 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                 dead.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
                 dead.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
             }
+        }
+    }
+
+    public void killWithTotem(Player p, UUID otherPlayer, boolean otherPlayerHoldingTotem) {
+        UUID playerUUID = p.getUniqueId();
+        if (gameData.uuidUserPair.containsKey(playerUUID)) {
+            UserPair pair = gameData.uuidUserPair.get(playerUUID);
+            pair.killPlayersWithTotem(p, otherPlayer, otherPlayerHoldingTotem);
         }
     }
 
@@ -349,7 +408,6 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case GOAT_HORN:
                     GameData.announceSoulmate = !GameData.announceSoulmate;
-//                    for showing in chat
                     break;
                 case ENCHANTING_TABLE:
                     GameData.canCraftEnchantingTable = !GameData.canCraftEnchantingTable;
@@ -538,7 +596,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (gameStarted) {
             Player hungerChanged = (Player) event.getEntity();
             UserPair pair = gameData.uuidUserPair.get(hungerChanged.getUniqueId());
-            if (pair != null) {
+            if (pair != null && pair.isSharingHunger) {
                 event.setCancelled(true);
                 pair.setHunger(event.getFoodLevel());
             }

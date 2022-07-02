@@ -335,41 +335,44 @@ class UserPair implements Serializable {
         return sharedHealth;
     }
 
-    public void setHealth(double sharedHealth) {
-        if (System.currentTimeMillis() - lastDamageUpdated < 50) {
+    public void setHealth(double sharedHealth, Player attackedPlayer) {
+        if (System.currentTimeMillis() - lastDamageUpdated < 1) {
             return;
         }
         lastDamageUpdated = System.currentTimeMillis();
-        boolean tookDamage = false;
-        if (this.sharedHealth - sharedHealth > 0) {
-            tookDamage = true;
-        }
         this.sharedHealth = sharedHealth;
         if (this.sharedHealth > 20) {
             this.sharedHealth = 20;
         }
         Player tPlayer = Bukkit.getPlayer(player1);
         if (tPlayer != null) {
-            if (tookDamage) {
-                tPlayer.playEffect(EntityEffect.HURT);
-            }
-            try {
-                tPlayer.setHealth(sharedHealth);
-            } catch (Exception e) {
-
-            }
+            tPlayer.setHealth(sharedHealth);
         }
         tPlayer = Bukkit.getPlayer(player2);
         if (tPlayer != null) {
-            if (tookDamage) {
-                tPlayer.playEffect(EntityEffect.HURT);
-            }
             tPlayer.setHealth(sharedHealth);
         }
     }
 
+    public void damage(Player p, double damageAmount) {
+        if (System.currentTimeMillis() - lastDamageUpdated < 1) {
+            return;
+        }
+        lastDamageUpdated = System.currentTimeMillis();
+        Player tPlayer = Bukkit.getPlayer(player1);
+        if (tPlayer != null && p != tPlayer) {
+            tPlayer.setHealth(damageAmount);
+            tPlayer.playEffect(EntityEffect.HURT);
+        }
+        tPlayer = Bukkit.getPlayer(player2);
+        if (tPlayer != null && p != tPlayer) {
+            tPlayer.setHealth(damageAmount);
+            tPlayer.playEffect(EntityEffect.HURT);
+        }
+    }
+
     public void killPlayers(Player p) {
-        if (System.currentTimeMillis() - lastDamageUpdated < 50) {
+        if (System.currentTimeMillis() - lastDamageUpdated < 1) {
             return;
         }
         lastDamageUpdated = System.currentTimeMillis();
@@ -385,6 +388,23 @@ class UserPair implements Serializable {
             sharedLives -= 1;
         }
         sharedHealth = 20;
+    }
+
+    public void killPlayersWithTotem(Player p, UUID otherPlayer, boolean otherPlayerHoldingTotem) {
+        // Player p should be the player with the totem, preferably the one that took damage
+        if (System.currentTimeMillis() - lastDamageUpdated < 50) {
+            return;
+        }
+        lastDamageUpdated = System.currentTimeMillis();
+        Player tPlayer = Bukkit.getPlayer(otherPlayer);
+        if (otherPlayerHoldingTotem) {
+            p.damage(10000);
+        }
+        if (tPlayer != null) {
+            tPlayer.playEffect(EntityEffect.TOTEM_RESURRECT);
+            tPlayer.playEffect(EntityEffect.HURT);
+            tPlayer.setHealth(1);
+        }
     }
 
     public void refreshPlayers() {
@@ -411,5 +431,4 @@ class UserPair implements Serializable {
             tPlayer.setFoodLevel(newHunger);
         }
     }
-
 }
