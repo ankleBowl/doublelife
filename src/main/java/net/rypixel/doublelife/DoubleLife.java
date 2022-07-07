@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -441,6 +442,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     event.getWhoClicked().openInventory(inv);
                     refreshView = false;
                     break;
+                case EXPERIENCE_BOTTLE:
+                    GameData.isSharingXpGlobal = !GameData.isSharingXpGlobal;
+                    break;
 
             }
             if (refreshView) {
@@ -601,6 +605,20 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             if (pair != null && pair.isSharingHunger) {
                 event.setCancelled(true);
                 pair.setHunger(event.getFoodLevel());
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerXpChange(PlayerExpChangeEvent event) {
+        if (gameStarted) {
+            Player xpChanged = event.getPlayer();
+            UserPair pair = gameData.uuidUserPair.get(xpChanged.getUniqueId());
+            if (pair != null && pair.isSharingHunger) {
+                int newAmount = event.getAmount();
+                event.setAmount(0);
+                int currentAmount = pair.xpAmount;
+                pair.setXp(newAmount + currentAmount);
             }
         }
     }

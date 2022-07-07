@@ -32,6 +32,7 @@ public class GameData implements Serializable {
     public static boolean isSharingHunger = false;
     public static boolean customTntRecipe = true;
     public static boolean anyPlayerCanRefresh = false;
+    public static boolean isSharingXpGlobal = false;
 
 
 
@@ -103,10 +104,10 @@ public class GameData implements Serializable {
                     double sharedHealth = Double.valueOf(parts[5]);
 
                     boolean isSharingXp = false;
-                    double sharedXp = 0;
+                    int sharedXp = 0;
                     if (versionNumber > 3) {
                         isSharingXp = Boolean.valueOf(parts[6]);
-                        sharedXp = Double.valueOf(parts[7]);
+                        sharedXp = Integer.valueOf(parts[7]);
                     }
 
                     UserPair pair = new UserPair(player1, player2, isSharingHunger, sharedLives);
@@ -208,6 +209,7 @@ public class GameData implements Serializable {
             Player player2 = participatingPlayers.get(random.nextInt(participatingPlayers.size()));
             participatingPlayers.remove(player2);
             UserPair pair = new UserPair(player1.getUniqueId(), player2.getUniqueId(), isSharingHunger, startingLives);
+            pair.isSharingXp = isSharingXpGlobal;
             gameData.uuidUserPair.put(player1.getUniqueId(), pair);
             gameData.uuidUserPair.put(player2.getUniqueId(), pair);
         }
@@ -219,6 +221,7 @@ public class GameData implements Serializable {
                 UUID player2 = predeterminedGroups.get(0);
                 predeterminedGroups.remove(player2);
                 UserPair pair = new UserPair(player1, player2, isSharingHunger, startingLives);
+                pair.isSharingXp = isSharingXpGlobal;
                 gameData.uuidUserPair.put(player1, pair);
                 gameData.uuidUserPair.put(player2, pair);
             }
@@ -339,7 +342,7 @@ class UserPair implements Serializable {
 
     public long lastDamageUpdated = 0;
 
-    public double xpAmount = 0;
+    public int xpAmount = 0;
     public boolean isSharingXp = false;
 
     UserPair(UUID player1, UUID player2, boolean isSharingHunger, int sharedLives) {
@@ -429,12 +432,22 @@ class UserPair implements Serializable {
         Player tPlayer = Bukkit.getPlayer(player1);
         if (tPlayer != null) {
             tPlayer.setHealth(sharedHealth);
-            tPlayer.setFoodLevel((int) sharedHunger);
+            if (isSharingHunger) {
+                tPlayer.setFoodLevel((int) sharedHunger);
+            }
+            if (isSharingXp) {
+                tPlayer.setTotalExperience(xpAmount);
+            }
         }
         tPlayer = Bukkit.getPlayer(player2);
         if (tPlayer != null) {
             tPlayer.setHealth(sharedHealth);
-            tPlayer.setFoodLevel((int) sharedHunger);
+            if (isSharingHunger) {
+                tPlayer.setFoodLevel((int) sharedHunger);
+            }
+            if (isSharingXp) {
+                tPlayer.setTotalExperience(xpAmount);
+            }
         }
     }
 
@@ -447,6 +460,18 @@ class UserPair implements Serializable {
         tPlayer = Bukkit.getPlayer(player2);
         if (tPlayer != null) {
             tPlayer.setFoodLevel(newHunger);
+        }
+    }
+
+    public void setXp(int newXP) {
+        xpAmount = newXP;
+        Player tPlayer = Bukkit.getPlayer(player1);
+        if (tPlayer != null) {
+            tPlayer.setTotalExperience(xpAmount);
+        }
+        tPlayer = Bukkit.getPlayer(player2);
+        if (tPlayer != null) {
+            tPlayer.setTotalExperience(xpAmount);
         }
     }
 }
