@@ -31,6 +31,7 @@ public class GameData implements Serializable {
     public static boolean lifeCountEnabled = true;
     public static boolean isSharingHunger = false;
     public static boolean customTntRecipe = true;
+    public static boolean anyPlayerCanRefresh = false;
 
 
 
@@ -42,7 +43,7 @@ public class GameData implements Serializable {
     }
 
     public void saveData() {
-        int saveVersion = 3;
+        int saveVersion = 4;
 
         String output = "";
         output += String.valueOf(saveVersion) + "\n";
@@ -55,10 +56,10 @@ public class GameData implements Serializable {
             }
             savedPairs.add(entry.getValue());
             UserPair pair = entry.getValue();
-            output += pair.player1.toString() + "," + pair.player2.toString() + "," + pair.isSharingHunger + "," + pair.sharedHunger + "," + pair.sharedLives + "," + pair.sharedHealth + "~";
+            output += pair.player1.toString() + "," + pair.player2.toString() + "," + pair.isSharingHunger + "," + pair.sharedHunger + "," + pair.sharedLives + "," + pair.sharedHealth + "," + pair.isSharingXp + "," + pair.xpAmount + "~";
         }
         output = output.substring(0, output.length() - 1) + "\n";
-        output += canCraftEnchantingTable + "\n" + announceSoulmate + "\n" + tellSoulmate + "\n" + startingLives + "\n" + customTntRecipe;
+        output += canCraftEnchantingTable + "\n" + announceSoulmate + "\n" + tellSoulmate + "\n" + startingLives + "\n" + customTntRecipe + "\n" + anyPlayerCanRefresh;
 
         String path = Path.of(Bukkit.getWorlds().get(0).getWorldFolder().getPath(), "save.doublelife").toString();
 
@@ -101,9 +102,19 @@ public class GameData implements Serializable {
                     int sharedLives = Integer.valueOf(parts[4]);
                     double sharedHealth = Double.valueOf(parts[5]);
 
+                    boolean isSharingXp = false;
+                    double sharedXp = 0;
+                    if (versionNumber > 3) {
+                        isSharingXp = Boolean.valueOf(parts[6]);
+                        sharedXp = Double.valueOf(parts[7]);
+                    }
+
                     UserPair pair = new UserPair(player1, player2, isSharingHunger, sharedLives);
                     pair.sharedHunger = sharedHunger;
                     pair.sharedHealth = sharedHealth;
+
+                    pair.isSharingXp = isSharingXp;
+                    pair.xpAmount = sharedXp;
 
                     data.uuidUserPair.put(player1, pair);
                     data.uuidUserPair.put(player2, pair);
@@ -118,6 +129,10 @@ public class GameData implements Serializable {
 
                     if (versionNumber > 2) {
                         customTntRecipe = Boolean.valueOf(sections[6]);
+
+                        if (versionNumber > 3) {
+                            anyPlayerCanRefresh = Boolean.valueOf(sections[7]);
+                        }
                     }
                 } else {
                     needDataReentryAfterUpdateForVersion2 = true;
@@ -323,6 +338,9 @@ class UserPair implements Serializable {
     public UUID player2;
 
     public long lastDamageUpdated = 0;
+
+    public double xpAmount = 0;
+    public boolean isSharingXp = false;
 
     UserPair(UUID player1, UUID player2, boolean isSharingHunger, int sharedLives) {
         this.player1 = player1;
