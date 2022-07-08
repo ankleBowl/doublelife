@@ -54,18 +54,23 @@ public class Inventories {
 
         lore.add("Toggles pairs having");
         lore.add("a shared experience bar");
-        inv.setItem(6, getItem(Material.EXPERIENCE_BOTTLE, "Shared XP", lore));
+        inv.setItem(5, getItem(Material.EXPERIENCE_BOTTLE, "Shared XP", GameData.isSharingXpGlobal, lore));
+        lore.clear();
+
+        lore.add("Toggles pairs having");
+        lore.add("shared potion effects");
+        inv.setItem(6, getItem(Material.POTION, "Shared Effects", GameData.isSharingEffects, lore));
         lore.clear();
 
         lore.add("Manage the amount of");
         lore.add("starting lives each");
         lore.add("team has");
-        inv.setItem(6, getItem(Material.NETHER_STAR, "Manage Lives", lore));
+        inv.setItem(7, getItem(Material.NETHER_STAR, "Manage Lives", lore));
         lore.clear();
 
         lore.add("Manage the predetermined");
         lore.add("starting teams");
-        inv.setItem(7, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
+        inv.setItem(8, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
         lore.clear();
 
         return inv;

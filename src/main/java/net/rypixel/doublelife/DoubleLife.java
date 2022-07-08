@@ -20,11 +20,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.spigotmc.event.entity.EntityMountEvent;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -619,6 +622,58 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                 event.setAmount(0);
                 int currentAmount = pair.xpAmount;
                 pair.setXp(newAmount + currentAmount);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEffectChange(EntityPotionEffectEvent event) {
+        if (event.getCause() == EntityPotionEffectEvent.Cause.PLUGIN) {
+            return;
+        }
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+        if (!gameStarted) {
+            return;
+        }
+        Player p = (Player) event.getEntity();
+        UserPair pair = gameData.uuidUserPair.get(p.getUniqueId());
+        if (pair != null) {
+            if (pair.sharingEffects) {
+                event.setCancelled(true);
+                switch (event.getAction()) {
+                    case REMOVED:
+                        PotionEffectType typeToRemove = event.getModifiedType();
+                        if (Bukkit.getPlayer(pair.player1) != null) {
+                            Bukkit.getPlayer(pair.player1).removePotionEffect(typeToRemove);
+                        }
+                        if (Bukkit.getPlayer(pair.player2) != null) {
+                            Bukkit.getPlayer(pair.player2).removePotionEffect(typeToRemove);
+                        }
+                        break;
+                    case CLEARED:
+                        if (Bukkit.getPlayer(pair.player1) != null) {
+                            for (PotionEffect effect : Bukkit.getPlayer(pair.player1).getActivePotionEffects()) {
+                                Bukkit.getPlayer(pair.player1).removePotionEffect(effect.getType());
+                            }
+                        }
+                        if (Bukkit.getPlayer(pair.player2) != null) {
+                            for (PotionEffect effect : Bukkit.getPlayer(pair.player2).getActivePotionEffects()) {
+                                Bukkit.getPlayer(pair.player2).removePotionEffect(effect.getType());
+                            }
+                        }
+                        break;
+                    default:
+                        PotionEffect newEffect = event.getNewEffect();
+                        if (Bukkit.getPlayer(pair.player1) != null) {
+                            Bukkit.getPlayer(pair.player1).addPotionEffect(newEffect);
+                        }
+                        if (Bukkit.getPlayer(pair.player2) != null) {
+                            Bukkit.getPlayer(pair.player2).addPotionEffect(newEffect);
+                        }
+                        break;
+                }
             }
         }
     }
