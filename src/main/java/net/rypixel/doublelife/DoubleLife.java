@@ -8,6 +8,7 @@ import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -85,7 +86,14 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (label.equalsIgnoreCase("doublelife")) {
             if (!sender.isOp()) {
+                if (args.length > 0) {
+                    if (args[0].equals("refresh") && GameData.anyPlayerCanRefresh) {
+                        refreshGame(sender);
+                        return true;
+                    }
+                }
                 sender.sendMessage(ChatColor.RED + "You must be OP to use doublelife commands!");
+                return false;
             }
             if (args.length < 1) {
                 if (sender instanceof Player) {
@@ -99,6 +107,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             switch (args[0]) {
                 case "start":
                     if (gameStarted) {
+                        sender.sendMessage(ChatColor.RED + "The game has already started!");
                         return false;
                     }
                     if (gameDataExists) {
@@ -194,28 +203,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     }
                     break;
                 case "refresh":
-                    if (!gameStarted) {
-                        sender.sendMessage(ChatColor.RED + "The game must be started to refresh!");
-                        return false;
-                    }
-                    gameData = GameData.createData(gameStarted, gameData);
-                    for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
-                        if (pair.getValue().sharedLives > 2) {
-                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
-                            threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
-                        } else if (pair.getValue().sharedLives == 2) {
-                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
-                            twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
-                        } else if (pair.getValue().sharedLives == 1) {
-                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
-                            oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
-                        } else {
-                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
-                            dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
-                        }
-
-                    }
-                    gameData.saveData();
+                    refreshGame(sender);
                     break;
                 case "help":
                     if (sender instanceof Player) {
@@ -231,6 +219,32 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         return true;
     }
 
+    boolean refreshGame(CommandSender sender) {
+        if (!gameStarted) {
+            sender.sendMessage(ChatColor.RED + "The game must be started to refresh!");
+            return false;
+        }
+        gameData = GameData.createData(gameStarted, gameData);
+        for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
+            if (pair.getValue().sharedLives > 2) {
+                threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+            } else if (pair.getValue().sharedLives == 2) {
+                twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                twoLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+            } else if (pair.getValue().sharedLives == 1) {
+                oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                oneLife.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+            } else {
+                dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
+                dead.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player2));
+            }
+
+        }
+        gameData.saveData();
+        return true;
+    }
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         event.getPlayer().setScoreboard(scoreboard);
@@ -243,6 +257,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             return;
         }
         userPair.refreshPlayers();
+        if (userPair.sharingEffects) {
+            userPair.refreshEfects(playerUUID, userPair.getOtherUUID(playerUUID));
+        }
         if (userPair.sharedLives == -1) {
             event.getPlayer().setScoreboard(null);
             return;
@@ -448,7 +465,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                 case EXPERIENCE_BOTTLE:
                     GameData.isSharingXpGlobal = !GameData.isSharingXpGlobal;
                     break;
-
+                case POTION:
+                    GameData.isSharingEffects = !GameData.isSharingEffects;
+                    break;
             }
             if (refreshView) {
                 inv = Inventories.getSettingsMenu();
@@ -617,13 +636,40 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (gameStarted) {
             Player xpChanged = event.getPlayer();
             UserPair pair = gameData.uuidUserPair.get(xpChanged.getUniqueId());
-            if (pair != null && pair.isSharingHunger) {
+            if (pair != null && pair.isSharingXp) {
                 int newAmount = event.getAmount();
                 event.setAmount(0);
                 int currentAmount = pair.xpAmount;
                 pair.setXp(newAmount + currentAmount);
             }
         }
+    }
+
+    @EventHandler
+    public void onPlayerEnchant(EnchantItemEvent event) {
+        if (gameStarted) {
+            Player xpChanged = event.getEnchanter();
+            UserPair pair = gameData.uuidUserPair.get(xpChanged.getUniqueId());
+            if (pair != null && pair.isSharingXp) {
+                int levelsToLose = event.getExpLevelCost();
+                int xpCost = levelsToXp(xpChanged.getLevel()) - levelsToXp(xpChanged.getLevel() - event.getExpLevelCost());
+                int currentAmount = pair.xpAmount;
+                pair.setXp(currentAmount - xpCost);
+                event.setExpLevelCost(0);
+            }
+        }
+    }
+
+//    Thanks to Andrew900460 in https://www.spigotmc.org/threads/converting-between-xp-and-levels.156592/
+    public static int levelsToXp(int levels) {
+        if (levels <= 16) {
+            return (int) (Math.pow(levels, 2)+6*levels);
+        } else if (levels >= 17 && levels <= 31) {
+            return (int) (2.5*Math.pow(levels, 2)-40.5*levels+360);
+        } else if (levels >= 32) {
+            return (int) (4.5*Math.pow(levels, 2)-162.5*levels+2220);
+        }
+        return -1;
     }
 
     @EventHandler

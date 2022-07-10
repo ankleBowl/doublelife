@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -89,7 +90,7 @@ public class GameData implements Serializable {
             String input = new String(Files.readAllBytes(Paths.get(path)));
             String[] sections = input.split("\n");
             Integer versionNumber = Integer.valueOf(sections[0]);
-            if (versionNumber == 1 || versionNumber == 2 || versionNumber == 3) {
+            if (versionNumber == 1 || versionNumber == 2 || versionNumber == 3 || versionNumber == 4) {
                 String[] pairs = sections[1].split("~");
                 boolean canCraftEnchantingTables = Boolean.valueOf(sections[2]);
 
@@ -272,66 +273,66 @@ public class GameData implements Serializable {
         return gameData;
     }
 
-    public void refreshPlayers() {
-        ArrayList<Player> unlinkedPlayers = new ArrayList<>();
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!uuidUserPair.containsKey(p.getUniqueId())) {
-                unlinkedPlayers.add(p);
-            }
-        }
-        if (unlinkedPlayers.size() % 2 != 0) {
-            unlinkedPlayers.remove(0);
-        }
-
-
-        Random random;
-        final int playerCount = unlinkedPlayers.size();
-        for (int i = 0; i < playerCount; i += 2) {
-            random = new Random();
-            Player player1 = unlinkedPlayers.get(random.nextInt(unlinkedPlayers.size()));
-            unlinkedPlayers.remove(player1);
-            random = new Random();
-            Player player2 = unlinkedPlayers.get(random.nextInt(unlinkedPlayers.size()));
-            unlinkedPlayers.remove(player2);
-            UserPair pair = new UserPair(player1.getUniqueId(), player2.getUniqueId(), isSharingHunger, startingLives);
-            uuidUserPair.put(player1.getUniqueId(), pair);
-            uuidUserPair.put(player2.getUniqueId(), pair);
-        }
-
-        for (Player p : unlinkedPlayers) {
-            p.sendTitle(ChatColor.GREEN + "Your soulmate is...", "", 20, 80, 0);
-        }
-        new BukkitRunnable() {
-            public void run() {
-                for (Player p : unlinkedPlayers) {
-                    UserPair pair = uuidUserPair.get(p.getUniqueId());
-                    if (tellSoulmate) {
-                        UUID otherPlayer = pair.player1;
-                        if (otherPlayer == p.getUniqueId()) {
-                            otherPlayer = pair.player2;
-                        }
-                        p.sendTitle(ChatColor.GREEN + Bukkit.getPlayer(otherPlayer).getDisplayName(), "", 0, 40, 20);
-                    } else {
-                        p.sendTitle(ChatColor.GREEN + "??????", "", 0, 40, 20);
-                    }
-                }
-                if (announceSoulmate) {
-                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "---------------");
-                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Teams:");
-                    ArrayList<UserPair> saidPairs = new ArrayList<>();
-                    for (Map.Entry<UUID, UserPair> entry : uuidUserPair.entrySet()) {
-                        UserPair pair = entry.getValue();
-                        if (saidPairs.contains(pair)) {
-                            continue;
-                        }
-                        saidPairs.add(pair);
-                        Bukkit.broadcastMessage(ChatColor.GREEN + Bukkit.getOfflinePlayer(pair.player1).getName() + " and " + Bukkit.getOfflinePlayer(pair.player2).getName());
-                    }
-                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "---------------");
-                }
-            }
-        }.runTaskLater(plugin, 100L);
-    }
+//    public void refreshPlayers() {
+//        ArrayList<Player> unlinkedPlayers = new ArrayList<>();
+//        for (Player p : Bukkit.getOnlinePlayers()) {
+//            if (!uuidUserPair.containsKey(p.getUniqueId())) {
+//                unlinkedPlayers.add(p);
+//            }
+//        }
+//        if (unlinkedPlayers.size() % 2 != 0) {
+//            unlinkedPlayers.remove(0);
+//        }
+//
+//
+//        Random random;
+//        final int playerCount = unlinkedPlayers.size();
+//        for (int i = 0; i < playerCount; i += 2) {
+//            random = new Random();
+//            Player player1 = unlinkedPlayers.get(random.nextInt(unlinkedPlayers.size()));
+//            unlinkedPlayers.remove(player1);
+//            random = new Random();
+//            Player player2 = unlinkedPlayers.get(random.nextInt(unlinkedPlayers.size()));
+//            unlinkedPlayers.remove(player2);
+//            UserPair pair = new UserPair(player1.getUniqueId(), player2.getUniqueId(), isSharingHunger, startingLives);
+//            uuidUserPair.put(player1.getUniqueId(), pair);
+//            uuidUserPair.put(player2.getUniqueId(), pair);
+//        }
+//
+//        for (Player p : unlinkedPlayers) {
+//            p.sendTitle(ChatColor.GREEN + "Your soulmate is...", "", 20, 80, 0);
+//        }
+//        new BukkitRunnable() {
+//            public void run() {
+//                for (Player p : unlinkedPlayers) {
+//                    UserPair pair = uuidUserPair.get(p.getUniqueId());
+//                    if (tellSoulmate) {
+//                        UUID otherPlayer = pair.player1;
+//                        if (otherPlayer == p.getUniqueId()) {
+//                            otherPlayer = pair.player2;
+//                        }
+//                        p.sendTitle(ChatColor.GREEN + Bukkit.getPlayer(otherPlayer).getDisplayName(), "", 0, 40, 20);
+//                    } else {
+//                        p.sendTitle(ChatColor.GREEN + "??????", "", 0, 40, 20);
+//                    }
+//                }
+//                if (announceSoulmate) {
+//                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "---------------");
+//                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "Teams:");
+//                    ArrayList<UserPair> saidPairs = new ArrayList<>();
+//                    for (Map.Entry<UUID, UserPair> entry : uuidUserPair.entrySet()) {
+//                        UserPair pair = entry.getValue();
+//                        if (saidPairs.contains(pair)) {
+//                            continue;
+//                        }
+//                        saidPairs.add(pair);
+//                        Bukkit.broadcastMessage(ChatColor.GREEN + Bukkit.getOfflinePlayer(pair.player1).getName() + " and " + Bukkit.getOfflinePlayer(pair.player2).getName());
+//                    }
+//                    Bukkit.broadcastMessage(ChatColor.DARK_GREEN + "---------------");
+//                }
+//            }
+//        }.runTaskLater(plugin, 100L);
+//    }
 }
 
 class UserPair implements Serializable {
@@ -443,7 +444,9 @@ class UserPair implements Serializable {
                 tPlayer.setFoodLevel((int) sharedHunger);
             }
             if (isSharingXp) {
-                tPlayer.setTotalExperience(xpAmount);
+                tPlayer.setExp(0.0F);
+                tPlayer.setLevel(0);
+                tPlayer.giveExp(xpAmount);
             }
         }
         tPlayer = Bukkit.getPlayer(player2);
@@ -453,7 +456,9 @@ class UserPair implements Serializable {
                 tPlayer.setFoodLevel((int) sharedHunger);
             }
             if (isSharingXp) {
-                tPlayer.setTotalExperience(xpAmount);
+                tPlayer.setExp(0.0F);
+                tPlayer.setLevel(0);
+                tPlayer.giveExp(xpAmount);
             }
         }
     }
@@ -474,11 +479,42 @@ class UserPair implements Serializable {
         xpAmount = newXP;
         Player tPlayer = Bukkit.getPlayer(player1);
         if (tPlayer != null) {
-            tPlayer.setTotalExperience(xpAmount);
+            Bukkit.broadcastMessage("Setting total experience of " + tPlayer.getName() + " to " + xpAmount);
+            tPlayer.setExp(0.0F);
+            tPlayer.setLevel(0);
+            tPlayer.giveExp(xpAmount);
         }
         tPlayer = Bukkit.getPlayer(player2);
         if (tPlayer != null) {
-            tPlayer.setTotalExperience(xpAmount);
+            Bukkit.broadcastMessage("Setting total experience of " + tPlayer.getName() + " to " + xpAmount);
+            tPlayer.setExp(0.0F);
+            tPlayer.setLevel(0);
+            tPlayer.giveExp(xpAmount);
+//            tPlayer.setTotalExperience(xpAmount);
+        }
+    }
+
+    public UUID getOtherUUID(UUID uuid) {
+        if (uuid == player1) {
+            return player2;
+        } else {
+            return player1;
+        }
+    }
+
+    public void refreshEfects(UUID playerToRefresh, UUID playerToRefreshFrom) {
+        if (Bukkit.getPlayer(playerToRefresh) == null || Bukkit.getPlayer(playerToRefreshFrom) == null) {
+            return;
+        }
+        Player refreshPlayer = Bukkit.getPlayer(playerToRefresh);
+        Player refreshFromPlayer = Bukkit.getPlayer(playerToRefreshFrom);
+
+        for (PotionEffect effect : refreshPlayer.getActivePotionEffects()) {
+            refreshPlayer.removePotionEffect(effect);
+        }
+
+        for (PotionEffect effect : refreshFromPlayer.getActivePotionEffects()) {
+            refreshPlayer.addPotionEffect(effect);
         }
     }
 }
