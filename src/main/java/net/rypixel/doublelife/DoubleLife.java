@@ -177,6 +177,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     gameDataExists = true;
                     break;
                 case "stop":
+                case "pause":
                     gameStarted = false;
                     Bukkit.broadcastMessage(ChatColor.YELLOW + "The game has been paused. Players will take damage normally");
                     break;
@@ -187,6 +188,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     } else {
                         sender.sendMessage(ChatColor.RED + "You cannot resume a game if the game has not been started. Use \"/doublelife start\" first!");
                     }
+                    break;
                 case "freeze":
                     if (!gameStarted) {
                         sender.sendMessage(ChatColor.RED + "The game must be started to freeze!");
