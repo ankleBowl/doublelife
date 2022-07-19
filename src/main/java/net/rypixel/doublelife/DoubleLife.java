@@ -79,7 +79,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         twoLives.unregister();
         oneLife.unregister();
         dead.unregister();
-        gameData.saveData();
+        if (gameData != null) {
+            gameData.saveData();
+        }
     }
 
     @Override
