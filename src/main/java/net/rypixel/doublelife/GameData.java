@@ -509,8 +509,9 @@ class UserPair implements Serializable {
         Player refreshPlayer = Bukkit.getPlayer(playerToRefresh);
         Player refreshFromPlayer = Bukkit.getPlayer(playerToRefreshFrom);
 
-        for (PotionEffect effect : refreshPlayer.getActivePotionEffects()) {
-            refreshPlayer.removePotionEffect(effect);
+        final Collection<PotionEffect> potionEffects = refreshPlayer.getActivePotionEffects();
+        for (PotionEffect effect : potionEffects) {
+            refreshPlayer.removePotionEffect(effect.getType());
         }
 
         for (PotionEffect effect : refreshFromPlayer.getActivePotionEffects()) {

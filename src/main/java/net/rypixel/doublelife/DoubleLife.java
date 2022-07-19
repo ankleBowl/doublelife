@@ -176,8 +176,15 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case "stop":
                     gameStarted = false;
-                    sender.sendMessage(ChatColor.YELLOW + "The game has been paused. Players will take damage normally");
+                    Bukkit.broadcastMessage(ChatColor.YELLOW + "The game has been paused. Players will take damage normally");
                     break;
+                case "resume":
+                    if (gameDataExists == true) {
+                        gameStarted = true;
+                        Bukkit.broadcastMessage(ChatColor.GREEN + "The game has been resumed!");
+                    } else {
+                        sender.sendMessage(ChatColor.RED + "You cannot resume a game if the game has not been started. Use \"/doublelife start\" first!");
+                    }
                 case "freeze":
                     if (!gameStarted) {
                         sender.sendMessage(ChatColor.RED + "The game must be started to freeze!");
@@ -467,7 +474,20 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case POTION:
                     GameData.isSharingEffects = !GameData.isSharingEffects;
+                    if (gameDataExists) {
+                        ArrayList<UserPair> userPairs = new ArrayList<>();
+                        for (Map.Entry<UUID, UserPair> entry : gameData.uuidUserPair.entrySet()) {
+                            if (!userPairs.contains(entry.getValue())) {
+                                userPairs.add(entry.getValue());
+                            }
+                        }
+                        for (UserPair pair : userPairs) {
+                            pair.sharingEffects = GameData.isSharingEffects;
+                        }
+                    }
                     break;
+                case CONDUIT:
+                    GameData.anyPlayerCanRefresh = !GameData.anyPlayerCanRefresh;
             }
             if (refreshView) {
                 inv = Inventories.getSettingsMenu();
@@ -700,12 +720,14 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         break;
                     case CLEARED:
                         if (Bukkit.getPlayer(pair.player1) != null) {
-                            for (PotionEffect effect : Bukkit.getPlayer(pair.player1).getActivePotionEffects()) {
+                            final Collection<PotionEffect> potionEffects = Bukkit.getPlayer(pair.player1).getActivePotionEffects();
+                            for (PotionEffect effect : potionEffects) {
                                 Bukkit.getPlayer(pair.player1).removePotionEffect(effect.getType());
                             }
                         }
                         if (Bukkit.getPlayer(pair.player2) != null) {
-                            for (PotionEffect effect : Bukkit.getPlayer(pair.player2).getActivePotionEffects()) {
+                            final Collection<PotionEffect> potionEffects = Bukkit.getPlayer(pair.player2).getActivePotionEffects();
+                            for (PotionEffect effect : potionEffects) {
                                 Bukkit.getPlayer(pair.player2).removePotionEffect(effect.getType());
                             }
                         }

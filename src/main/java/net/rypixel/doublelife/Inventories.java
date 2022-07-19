@@ -38,7 +38,7 @@ public class Inventories {
         lore.add("tables");
         lore.add("(For servers that have");
         lore.add("only one enchanting table)");
-        inv.setItem(2, getItem(Material.ENCHANTING_TABLE, "Uncraftable Enchating Table", GameData.canCraftEnchantingTable, lore));
+        inv.setItem(2, getItem(Material.ENCHANTING_TABLE, "Uncraftable Enchating Table", !GameData.canCraftEnchantingTable, lore));
         lore.clear();
 
         lore.add("Toggles the custom TNT");
@@ -52,14 +52,23 @@ public class Inventories {
         inv.setItem(4, getItem(Material.COOKED_BEEF, "Hunger Sharing", GameData.isSharingHunger, lore));
         lore.clear();
 
-        lore.add("Toggles pairs having");
-        lore.add("a shared experience bar");
-        inv.setItem(5, getItem(Material.EXPERIENCE_BOTTLE, "Shared XP", GameData.isSharingXpGlobal, lore));
-        lore.clear();
+//        lore.add("Toggles pairs having");
+//        lore.add("a shared experience bar");
+//        lore.add(ChatColor.RED + "Warning: Due to how XP is stored");
+//        lore.add(ChatColor.RED + "internally, XP deductions may remove");
+//        lore.add(ChatColor.RED + "slightly more or less than they should");
+//        inv.setItem(5, getItem(Material.EXPERIENCE_BOTTLE, "Shared XP", GameData.isSharingXpGlobal, lore));
+//        lore.clear();
 
         lore.add("Toggles pairs having");
         lore.add("shared potion effects");
-        inv.setItem(6, getItem(Material.POTION, "Shared Effects", GameData.isSharingEffects, lore));
+        inv.setItem(5, getItem(Material.POTION, "Shared Effects", GameData.isSharingEffects, lore));
+        lore.clear();
+
+        lore.add("Allow non OP players");
+        lore.add("to add new players to");
+        lore.add("the game");
+        inv.setItem(6, getItem(Material.CONDUIT, "All Player Refresh", GameData.anyPlayerCanRefresh, lore));
         lore.clear();
 
         lore.add("Manage the amount of");
