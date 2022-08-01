@@ -71,9 +71,11 @@ public class Inventories {
         inv.setItem(6, getItem(Material.CONDUIT, "All Player Refresh", GameData.anyPlayerCanRefresh, lore));
         lore.clear();
 
-//        lore.add("Allow non OP players");
-//        lore.add("to add new players to");
-//        lore.add("the game");
+        lore.add("Replaces players with Husks");
+        lore.add("to absorb damage when offline");
+        lore.add(ChatColor.RED + "WARNING: This is experimental!");
+        lore.add(ChatColor.RED + "It may not work in edge cases");
+        lore.add(ChatColor.RED + "ex: Totem of Undying have no effect");
         inv.setItem(7, getItem(Material.ZOMBIE_SPAWN_EGG, "Anti Combat Log", GameData.zombieBackups, lore));
         lore.clear();
 
