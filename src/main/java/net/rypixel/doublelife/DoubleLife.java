@@ -158,7 +158,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case "restart":
                     if (args.length < 2) {
-                        sender.sendMessage("\"This command will remove all save data for DoubleLife. Please run /doublelife restart confirm to allow this.\"");
+                        sender.sendMessage("This command will remove all save data for DoubleLife. Please run /doublelife restart confirm to allow this.");
                         return false;
                     }
                     gameStarted = true;
