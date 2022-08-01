@@ -3,19 +3,14 @@ package net.rypixel.doublelife;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Mob;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerExpChangeEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -27,10 +22,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.spigotmc.event.entity.EntityMountEvent;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class DoubleLife extends JavaPlugin implements Listener {
 
@@ -47,6 +39,13 @@ public final class DoubleLife extends JavaPlugin implements Listener {
 
     boolean isSharingHunger = false;
 
+
+
+    public HashMap<Husk, UUID> huskToUUID = new HashMap<Husk, UUID>();
+    public HashMap<UUID, Husk> uuidToHusk = new HashMap<UUID, Husk>();
+
+
+
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -55,6 +54,8 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (gameData == null) {
             gameStarted = false;
             gameDataExists = false;
+        } else {
+            GameData.readKillOnLogin();
         }
         Bukkit.getPluginManager().registerEvents(this, this);
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
@@ -81,6 +82,11 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         dead.unregister();
         if (gameData != null) {
             gameData.saveData();
+        }
+        if (GameData.zombieBackups) {
+            for (Map.Entry<Husk, UUID> entry : huskToUUID.entrySet()) {
+                entry.getKey().remove();
+            }
         }
     }
 
@@ -156,7 +162,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                         return false;
                     }
                     gameStarted = true;
-                    gameData = GameData.createData(false, gameData);
+                    gameData = GameData.createData(false, null);
                     for (Map.Entry<UUID, UserPair> pair : gameData.uuidUserPair.entrySet()) {
                         if (pair.getValue().sharedLives > 2) {
                             threeLives.addPlayer(Bukkit.getOfflinePlayer(pair.getValue().player1));
@@ -267,13 +273,22 @@ public final class DoubleLife extends JavaPlugin implements Listener {
         if (userPair == null) {
             return;
         }
+        if (GameData.killOnLogin.contains(playerUUID)) {
+            GameData.killOnLogin.remove(playerUUID);
+            event.getPlayer().setHealth(0);
+            event.getPlayer().spigot().respawn();
+        }
         userPair.refreshPlayers();
         if (userPair.sharingEffects) {
-            userPair.refreshEfects(playerUUID, userPair.getOtherUUID(playerUUID));
+            userPair.refreshEffects(playerUUID, userPair.getOtherUUID(playerUUID));
         }
-        if (userPair.sharedLives == -1) {
-            event.getPlayer().setScoreboard(null);
-            return;
+        if (GameData.zombieBackups) {
+            Husk zombie = uuidToHusk.get(playerUUID);
+            if (zombie != null) {
+                uuidToHusk.remove(playerUUID);
+                huskToUUID.remove(zombie);
+                zombie.remove();
+            }
         }
         if (userPair.sharedLives == 0) {
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
@@ -303,6 +318,9 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     public void onEntityDamage(EntityDamageEvent event) {
         if (!gameStarted) {
             return;
+        }
+        if (event.getEntity() instanceof Husk && GameData.zombieBackups) {
+            HandleZombie.onEntityDamage(event, this);
         }
         if (event.getEntity() instanceof Player) {
             Player p = (Player) event.getEntity();
@@ -377,7 +395,7 @@ public final class DoubleLife extends JavaPlugin implements Listener {
     public void onHealthChange(Player p, double newHealth) {
         UUID playerUUID = p.getUniqueId();
         if (gameData.uuidUserPair.containsKey(playerUUID)) {
-            gameData.uuidUserPair.get(playerUUID).setHealth(newHealth, p);
+            gameData.uuidUserPair.get(playerUUID).setHealth(newHealth);
         }
     }
 
@@ -411,6 +429,11 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                 oneLife.removePlayer(Bukkit.getOfflinePlayer(pair.player2));
                 dead.addPlayer(Bukkit.getOfflinePlayer(pair.player1));
                 dead.addPlayer(Bukkit.getOfflinePlayer(pair.player2));
+            }
+
+            if (GameData.zombieBackups) {
+                if (uuidToHusk.containsKey(pair.player1)) { uuidToHusk.get(pair.player1).remove(); }
+                if (uuidToHusk.containsKey(pair.player2)) { uuidToHusk.get(pair.player1).remove(); }
             }
         }
     }
@@ -492,6 +515,10 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                     break;
                 case CONDUIT:
                     GameData.anyPlayerCanRefresh = !GameData.anyPlayerCanRefresh;
+                    break;
+                case ZOMBIE_SPAWN_EGG:
+                    GameData.zombieBackups = !GameData.zombieBackups;
+                    break;
             }
             if (refreshView) {
                 inv = Inventories.getSettingsMenu();
@@ -602,6 +629,35 @@ public final class DoubleLife extends JavaPlugin implements Listener {
             if (event.getRecipe().getResult().getType() == Material.ENCHANTING_TABLE && !GameData.canCraftEnchantingTable) {
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (!gameStarted) {
+            return;
+        }
+        if (!GameData.zombieBackups) {
+            return;
+        }
+        Player p = event.getPlayer();
+        UserPair pair = gameData.uuidUserPair.get(p.getUniqueId());
+        if (pair == null) {
+            return;
+        }
+        if (pair.sharedLives > 0 || pair.sharedLives == -99) {
+            Husk zombie = (Husk) p.getWorld().spawnEntity(p.getLocation(), EntityType.HUSK);
+            zombie.setAI(false);
+            zombie.setCustomName(p.getDisplayName());
+            zombie.setCustomNameVisible(true);
+            zombie.setBaby(false);
+            zombie.getEquipment().clear();
+            zombie.getEquipment().setArmorContents(p.getInventory().getArmorContents());
+            zombie.getEquipment().setItemInMainHand(p.getInventory().getItemInMainHand());
+            zombie.getEquipment().setItemInOffHand(p.getInventory().getItemInOffHand());
+            zombie.addPotionEffects(p.getActivePotionEffects());
+            huskToUUID.put(zombie, p.getUniqueId());
+            uuidToHusk.put(p.getUniqueId(), zombie);
         }
     }
 

@@ -53,10 +53,10 @@
     </build>
 
     <repositories>
-        <repository>
-            <id>spigotmc-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-        </repository>
+<!--        <repository>-->
+<!--            <id>spigotmc-repo</id>-->
+<!--            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>-->
+<!--        </repository>-->
         <repository>
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/groups/public/</url>
@@ -70,5 +70,14 @@
             <version>1.19-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>org.craftbukkit</groupId>
+            <artifactId>craftbukkit</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/craftbukkit-1.19-R0.1-SNAPSHOT.jar</systemPath>
+        </dependency>
+
     </dependencies>
 </project>

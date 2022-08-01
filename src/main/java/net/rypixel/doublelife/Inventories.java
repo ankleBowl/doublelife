@@ -17,7 +17,7 @@ import java.util.UUID;
 public class Inventories {
 
     public static Inventory getSettingsMenu() {
-        Inventory inv = Bukkit.createInventory(null, 9, "Settings");
+        Inventory inv = Bukkit.createInventory(null, 18, "Settings");
 
         ArrayList<String> lore = new ArrayList<>();
 
@@ -71,15 +71,21 @@ public class Inventories {
         inv.setItem(6, getItem(Material.CONDUIT, "All Player Refresh", GameData.anyPlayerCanRefresh, lore));
         lore.clear();
 
+//        lore.add("Allow non OP players");
+//        lore.add("to add new players to");
+//        lore.add("the game");
+        inv.setItem(7, getItem(Material.ZOMBIE_SPAWN_EGG, "Anti Combat Log", GameData.zombieBackups, lore));
+        lore.clear();
+
         lore.add("Manage the amount of");
         lore.add("starting lives each");
         lore.add("team has");
-        inv.setItem(7, getItem(Material.NETHER_STAR, "Manage Lives", lore));
+        inv.setItem(16, getItem(Material.NETHER_STAR, "Manage Lives", lore));
         lore.clear();
 
         lore.add("Manage the predetermined");
         lore.add("starting teams");
-        inv.setItem(8, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
+        inv.setItem(17, getItem(Material.TOTEM_OF_UNDYING, "Manage Teams", lore));
         lore.clear();
 
         return inv;

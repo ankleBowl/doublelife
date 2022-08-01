@@ -22,6 +22,7 @@ public class GameData implements Serializable {
     public HashMap<UUID, UserPair> uuidUserPair = new HashMap<>();
     public static JavaPlugin plugin;
 
+    public static ArrayList<UUID> killOnLogin = new ArrayList<UUID>();
 
     // Config
     public static ArrayList<UUID> predeterminedGroups = new ArrayList<>();
@@ -34,8 +35,8 @@ public class GameData implements Serializable {
     public static boolean customTntRecipe = true;
     public static boolean anyPlayerCanRefresh = false;
     public static boolean isSharingXpGlobal = false;
-
     public static boolean isSharingEffects = false;
+    public static boolean zombieBackups = false;
 
 
 
@@ -46,13 +47,14 @@ public class GameData implements Serializable {
     }
 
     public void saveData() {
-        int saveVersion = 4;
+        int saveVersion = 5;
 
         String output = "";
         output += String.valueOf(saveVersion) + "\n";
 
         ArrayList<UserPair> savedPairs = new ArrayList<>();
 
+        // First, save the data relating to the game settings and pairs in save.doublelife
         for (Map.Entry<UUID, UserPair> entry : uuidUserPair.entrySet()) {
             if (savedPairs.contains(entry.getValue())) {
                 continue;
@@ -62,7 +64,7 @@ public class GameData implements Serializable {
             output += pair.player1.toString() + "," + pair.player2.toString() + "," + pair.isSharingHunger + "," + pair.sharedHunger + "," + pair.sharedLives + "," + pair.sharedHealth + "," + pair.isSharingXp + "," + pair.xpAmount + "," + pair.sharingEffects + "~";
         }
         output = output.substring(0, output.length() - 1) + "\n";
-        output += canCraftEnchantingTable + "\n" + announceSoulmate + "\n" + tellSoulmate + "\n" + startingLives + "\n" + customTntRecipe + "\n" + anyPlayerCanRefresh;
+        output += canCraftEnchantingTable + "\n" + announceSoulmate + "\n" + tellSoulmate + "\n" + startingLives + "\n" + customTntRecipe + "\n" + anyPlayerCanRefresh + "\n" + zombieBackups;
 
         String path = Path.of(Bukkit.getWorlds().get(0).getWorldFolder().getPath(), "save.doublelife").toString();
 
@@ -75,22 +77,51 @@ public class GameData implements Serializable {
                 e1.printStackTrace();
             }
         }
+
+
+//      Now save the players that have been killed when they were offline
+        String path1 = Path.of(Bukkit.getWorlds().get(0).getWorldFolder().getPath(), "killonlogin.doublelife").toString();
+        String output1 = "";
+        for (UUID uuid : killOnLogin) {
+            output1 = output1 + uuid.toString() + ",";
+        }
+        if (output1.length() != 0) {
+            output1 = output1.substring(0, output1.length() - 1);
+        }
+        try (PrintWriter out = new PrintWriter(path1)) {
+            out.println(output1);
+        } catch (Exception e) {
+            try (PrintWriter out = new PrintWriter(path1)) {
+                out.println(output1);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+            }
+        }
     }
 
-    public boolean isParticipating(UUID uuid) {
-        return uuidUserPair.containsKey(uuid);
+    public static void readKillOnLogin() {
+        String path = Path.of(Bukkit.getWorlds().get(0).getWorldFolder().getPath(), "killonlogin.doublelife").toString();
+        try {
+            String input = new String(Files.readAllBytes(Paths.get(path)));
+            String[] uuids = input.split(",");
+            for (String uuid : uuids) {
+                Bukkit.broadcastMessage(uuid);
+                killOnLogin.add(UUID.fromString(uuid));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 //    Static things
     public static GameData readData() {
         String path = Path.of(Bukkit.getWorlds().get(0).getWorldFolder().getPath(), "save.doublelife").toString();
         GameData data = new GameData();
-
         try {
             String input = new String(Files.readAllBytes(Paths.get(path)));
             String[] sections = input.split("\n");
             Integer versionNumber = Integer.valueOf(sections[0]);
-            if (versionNumber == 1 || versionNumber == 2 || versionNumber == 3 || versionNumber == 4) {
+            if (versionNumber == 1 || versionNumber == 2 || versionNumber == 3 || versionNumber == 4 || versionNumber == 5) {
                 String[] pairs = sections[1].split("~");
                 boolean canCraftEnchantingTables = Boolean.valueOf(sections[2]);
 
@@ -138,6 +169,10 @@ public class GameData implements Serializable {
 
                         if (versionNumber > 3) {
                             anyPlayerCanRefresh = Boolean.valueOf(sections[7]);
+
+                            if (versionNumber > 4) {
+                                zombieBackups = Boolean.valueOf(sections[8]);
+                            }
                         }
                     }
                 } else {
@@ -154,6 +189,7 @@ public class GameData implements Serializable {
                 recipe.setIngredient('G', Material.GUNPOWDER);
                 Bukkit.addRecipe(recipe);
             }
+
 
             return data;
         } catch (Exception e) {
@@ -360,11 +396,7 @@ class UserPair implements Serializable {
         this.sharedLives = sharedLives;
     }
 
-    public double getHealth() {
-        return sharedHealth;
-    }
-
-    public void setHealth(double sharedHealth, Player attackedPlayer) {
+    public void setHealth(double sharedHealth) {
         if (System.currentTimeMillis() - lastDamageUpdated < 1) {
             return;
         }
@@ -388,6 +420,7 @@ class UserPair implements Serializable {
             return;
         }
         lastDamageUpdated = System.currentTimeMillis();
+
         Player tPlayer = Bukkit.getPlayer(player1);
         if (tPlayer != null && p != tPlayer) {
             tPlayer.setHealth(damageAmount);
@@ -398,6 +431,7 @@ class UserPair implements Serializable {
             tPlayer.setHealth(damageAmount);
             tPlayer.playEffect(EntityEffect.HURT);
         }
+        sharedHealth = damageAmount;
     }
 
     public void killPlayers(Player p) {
@@ -405,18 +439,26 @@ class UserPair implements Serializable {
             return;
         }
         lastDamageUpdated = System.currentTimeMillis();
-        Player tPlayer = Bukkit.getPlayer(player1);
-        if (tPlayer != null && tPlayer != p) {
-            tPlayer.setHealth(0);
-        }
-        tPlayer = Bukkit.getPlayer(player2);
-        if (tPlayer != null && tPlayer != p) {
-            tPlayer.setHealth(0);
-        }
+        tryKillPlayer(player1, p);
+        tryKillPlayer(player2, p);
         if (sharedLives != -99) {
             sharedLives -= 1;
         }
         sharedHealth = 20;
+    }
+
+    public void tryKillPlayer(UUID uuid, Player playerWhoDied) {
+        Player tPlayer = Bukkit.getPlayer(uuid);
+        if (tPlayer == playerWhoDied && playerWhoDied != null) {
+            return;
+        }
+        if (tPlayer != null) {
+            tPlayer.setHealth(0);
+        } else {
+            if (!GameData.killOnLogin.contains(uuid)) {
+                GameData.killOnLogin.add(uuid);
+            }
+        }
     }
 
     public void killPlayersWithTotem(Player p, UUID otherPlayer, boolean otherPlayerHoldingTotem) {
@@ -502,7 +544,7 @@ class UserPair implements Serializable {
         }
     }
 
-    public void refreshEfects(UUID playerToRefresh, UUID playerToRefreshFrom) {
+    public void refreshEffects(UUID playerToRefresh, UUID playerToRefreshFrom) {
         if (Bukkit.getPlayer(playerToRefresh) == null || Bukkit.getPlayer(playerToRefreshFrom) == null) {
             return;
         }
