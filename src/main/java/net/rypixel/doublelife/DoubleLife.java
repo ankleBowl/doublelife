@@ -222,6 +222,19 @@ public final class DoubleLife extends JavaPlugin implements Listener {
                 case "refresh":
                     refreshGame(sender);
                     break;
+                case "link":
+                    if (args.length < 2) {
+                        sender.sendMessage(ChatColor.RED + "Error: Improper usage. Please use /doublelife link (name) (name)");
+                    }
+                    OfflinePlayer player1 = Bukkit.getOfflinePlayer(args[1]);
+                    OfflinePlayer player2 = Bukkit.getOfflinePlayer(args[2]);
+                    if (player1 != null && player2 != null && !GameData.predeterminedGroups.contains(player1) && !GameData.predeterminedGroups.contains(player2)) {
+                        GameData.predeterminedGroups.add(player1.getUniqueId());
+                        GameData.predeterminedGroups.add(player2.getUniqueId());
+                    } else {
+                        sender.sendMessage(ChatColor.RED + "Player names are incorrect or already registered in pairs");
+                    }
+                    break;
                 case "help":
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
